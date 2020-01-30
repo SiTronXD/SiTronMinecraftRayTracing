@@ -56,7 +56,10 @@ public class PlayState extends GameState {
 		
 		// Shader uniforms
 		shaderProgram.setUniformMatrix("viewProjectionMatrix", rayTracingSpriteBatch.getProjectionMatrix());
+		shaderProgram.setUniform2fv("resolution", new float[] { 1920f, 1080f }, 0, 2);
 		
+		float[] cameraPosition = new float[] { 0.0f, 0.0f, -1.0f };
+		shaderProgram.setUniform3fv("u_cameraPosition", cameraPosition, 0, cameraPosition.length);
 		
 		rayTracingSpriteBatch.begin();
 		

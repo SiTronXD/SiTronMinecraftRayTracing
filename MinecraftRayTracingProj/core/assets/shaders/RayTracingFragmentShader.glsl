@@ -2,39 +2,75 @@
 precision highp float;
 #endif
 
-varying vec2 uvCoords;
+varying vec2 v_uvCoords;
+varying vec2 v_resolution;
+
+uniform vec3 u_cameraPosition;
+
+struct Material
+{
+	vec4 color;
+};
 
 struct Ray
 {
 	vec3 origin;
 	vec3 direction;
+	Material mat;
 };
+
+Material CreateDefaultMaterial()
+{
+	Material mat;
+	mat.color = vec4(0.1, 0.1, 0.1, 1.0);
+	
+	return mat;
+}
 
 Ray CreateRay(vec3 origin, vec3 direction)
 {
 	Ray r;
 	r.origin = origin;
 	r.direction = direction;
+	r.mat = CreateDefaultMaterial();
 	
 	return r;
+}
+
+float SqrLength(vec3 p)
+{
+	return dot(p, p);
 }
 
 void RayHitSphere(inout Ray r, vec3 position, float radius)
 {
 	float t = dot(position - r.origin, r.direction);
+	vec3 p = r.origin + r.direction * t;
+	float y = length(position - (p));
+	float x = sqrt(radius*radius - y*y);
+	float t1 = t - x;
+	float t2 = t + x;
+	
+	if(t >= 0.0 && SqrLength(position - p) <= radius*radius)
+	{
+		Material mat;
+		mat.color = vec4(0.9, 0.0, 0.0, 1.0);
+		
+		r.mat = mat;
+	}
 }
 
 vec4 RayTraceObjects(Ray r)
 {
-	RayHitSphere(r, vec3(0.0), 0.5);
+	RayHitSphere(r, vec3(0.0), 1.9);
 	
-	return vec4(1.0);
+	return r.mat.color;
 }
 
 vec4 RayTrace(vec2 uv)
 {
 	// Camera inputs
-	vec3 camPos = vec3(0.0, 0.0, -2.0);
+	vec3 camPos = u_cameraPosition;
 	vec3 camLookAt = vec3(0.0);
 	
 	// Create camera matrix
@@ -55,7 +91,8 @@ vec4 RayTrace(vec2 uv)
 
 void main()
 {
-	vec4 rayTraceColor = RayTrace(uvCoords);
+	vec2 uv = (v_uvCoords*v_resolution - v_resolution.xy*0.5) / v_resolution.y;
+	vec4 rayTraceColor = RayTrace(uv);
 
     gl_FragColor = rayTraceColor;
 }
