@@ -1,13 +1,17 @@
 package states;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 
 import engine.GameState;
 import engine.GameStateManager;
+import entities.Player;
 
 public class PlayState extends GameState {
 	Texture screenTexture;
@@ -15,6 +19,8 @@ public class PlayState extends GameState {
 	SpriteBatch rayTracingSpriteBatch;
 	
 	ShaderProgram shaderProgram;
+	
+	Player player;
 	
 	@Override
 	public void Init() {
@@ -31,6 +37,8 @@ public class PlayState extends GameState {
 		// Custom sprite batch only made for the ray tracer
 		rayTracingSpriteBatch = new SpriteBatch();
 		rayTracingSpriteBatch.setShader(shaderProgram);
+		
+		player = new Player(new Vector3(0.0f, 0.0f, -5.0f));
 	}
 	
 	@Override
@@ -41,12 +49,17 @@ public class PlayState extends GameState {
 
 	@Override
 	public void UpdateInput() {
-
+		int forward = Gdx.input.isKeyPressed(Keys.W) ? 1 : 0;
+		int back = Gdx.input.isKeyPressed(Keys.S) ? 1 : 0;
+		int left = Gdx.input.isKeyPressed(Keys.A) ? 1 : 0;
+		int right = Gdx.input.isKeyPressed(Keys.D) ? 1 : 0;
+		
+		player.SetMovementDirection(new Vector3(right - left, 0.0f, forward - back));
 	}
 
 	@Override
 	public void Update(float dt) {
-
+		player.Update(dt);
 	}
 
 	@Override
@@ -58,8 +71,17 @@ public class PlayState extends GameState {
 		shaderProgram.setUniformMatrix("viewProjectionMatrix", rayTracingSpriteBatch.getProjectionMatrix());
 		shaderProgram.setUniform2fv("resolution", new float[] { 1920f, 1080f }, 0, 2);
 		
-		float[] cameraPosition = new float[] { 0.0f, 0.0f, -1.0f };
+		float[] cameraPosition = new float[3]; 
+		cameraPosition[0] = player.GetPosition().x;
+		cameraPosition[1] = player.GetPosition().y;
+		cameraPosition[2] = player.GetPosition().z;
 		shaderProgram.setUniform3fv("u_cameraPosition", cameraPosition, 0, cameraPosition.length);
+		
+		float[] cameraViewDirection = new float[3];
+		cameraViewDirection[0] = player.GetViewDirection().x;
+		cameraViewDirection[1] = player.GetViewDirection().y;
+		cameraViewDirection[2] = player.GetViewDirection().z;
+		shaderProgram.setUniform3fv("u_cameraViewDirection", cameraViewDirection, 0, cameraViewDirection.length);
 		
 		rayTracingSpriteBatch.begin();
 		

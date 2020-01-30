@@ -6,6 +6,7 @@ varying vec2 v_uvCoords;
 varying vec2 v_resolution;
 
 uniform vec3 u_cameraPosition;
+uniform vec3 u_cameraViewDirection;
 
 struct Material
 {
@@ -71,10 +72,10 @@ vec4 RayTrace(vec2 uv)
 {
 	// Camera inputs
 	vec3 camPos = u_cameraPosition;
-	vec3 camLookAt = vec3(0.0);
+	vec3 camDir = u_cameraViewDirection;
 	
 	// Create camera matrix
-	vec3 camForward = normalize(camLookAt - camPos);
+	vec3 camForward = normalize(camDir);
 	vec3 camRight = normalize(cross(camForward, vec3(0.0, 1.0, 0.0)));
 	vec3 camUp = normalize(cross(camRight, camForward));
 	
