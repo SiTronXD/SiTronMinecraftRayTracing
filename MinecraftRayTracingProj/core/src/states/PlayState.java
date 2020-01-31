@@ -12,6 +12,7 @@ import com.badlogic.gdx.math.Vector3;
 import engine.GameState;
 import engine.GameStateManager;
 import entities.Player;
+import handlers.InputHandler;
 
 public class PlayState extends GameState {
 	Texture screenTexture;
@@ -19,6 +20,8 @@ public class PlayState extends GameState {
 	SpriteBatch rayTracingSpriteBatch;
 	
 	ShaderProgram shaderProgram;
+	
+	InputHandler inputHandler;
 	
 	Player player;
 	
@@ -38,7 +41,9 @@ public class PlayState extends GameState {
 		rayTracingSpriteBatch = new SpriteBatch();
 		rayTracingSpriteBatch.setShader(shaderProgram);
 		
-		player = new Player(new Vector3(0.0f, 0.0f, -5.0f));
+		player = new Player(new Vector3(0.0f, 0.0f, 5.0f));
+		
+		inputHandler = new InputHandler(player);
 	}
 	
 	@Override
@@ -49,12 +54,7 @@ public class PlayState extends GameState {
 
 	@Override
 	public void UpdateInput() {
-		int forward = Gdx.input.isKeyPressed(Keys.W) ? 1 : 0;
-		int back = Gdx.input.isKeyPressed(Keys.S) ? 1 : 0;
-		int left = Gdx.input.isKeyPressed(Keys.A) ? 1 : 0;
-		int right = Gdx.input.isKeyPressed(Keys.D) ? 1 : 0;
-		
-		player.SetMovementDirection(new Vector3(right - left, 0.0f, forward - back));
+		inputHandler.UpdateInput();
 	}
 
 	@Override
@@ -65,7 +65,6 @@ public class PlayState extends GameState {
 	@Override
 	public void Render(SpriteBatch spriteBatch) {
 		shaderProgram.begin();
-		
 		
 		// Shader uniforms
 		shaderProgram.setUniformMatrix("viewProjectionMatrix", rayTracingSpriteBatch.getProjectionMatrix());

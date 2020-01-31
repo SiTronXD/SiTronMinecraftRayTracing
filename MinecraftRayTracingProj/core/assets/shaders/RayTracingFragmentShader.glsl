@@ -45,15 +45,17 @@ float SqrLength(vec3 p)
 
 void RayHitSphere(inout Ray r, vec3 position, float radius)
 {
-	float t = dot(position - r.origin, r.direction);
+	float t = dot(position - r.origin, r.direction);	// Projection formula ( dot(u, v) / 1 )
 	vec3 p = r.origin + r.direction * t;
 	float y = length(position - (p));
-	float x = sqrt(radius*radius - y*y);
-	float t1 = t - x;
-	float t2 = t + x;
 	
-	if(t >= 0.0 && SqrLength(position - p) <= radius*radius)
+	if(t >= 0.0 && y < radius)
 	{
+		float x = sqrt(radius*radius - y*y);
+		float t1 = t - x;
+		float t2 = t + x;
+	
+	
 		Material mat;
 		mat.color = vec4(0.9, 0.0, 0.0, 1.0);
 		
@@ -77,11 +79,11 @@ vec4 RayTrace(vec2 uv)
 	// Create camera matrix
 	vec3 camForward = normalize(camDir);
 	vec3 camRight = normalize(cross(camForward, vec3(0.0, 1.0, 0.0)));
-	vec3 camUp = normalize(cross(camRight, camForward));
+	vec3 camUp = normalize(cross(camForward, -camRight));
 	
-	float zoom = 0.1;
+	float zoom = 1.0; // 90 degree vertical fov
 	
-	vec3 rayOrigin = camPos + camForward * zoom + camRight * uv.x + camUp * uv.y;
+	vec3 rayOrigin = camPos + (camForward * zoom) + (camRight * uv.x) + (camUp * uv.y);
 	vec3 rayDirection = normalize(rayOrigin - camPos);
 
 	// Create ray structure
