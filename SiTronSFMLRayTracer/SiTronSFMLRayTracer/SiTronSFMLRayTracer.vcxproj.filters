@@ -29,5 +29,11 @@
     <None Include="Resources\Shaders\RayTracing_Vert.glsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Resources\Shaders\PostProcessingEffect_Frag.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Resources\Shaders\PostProcessingEffect_Vert.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
