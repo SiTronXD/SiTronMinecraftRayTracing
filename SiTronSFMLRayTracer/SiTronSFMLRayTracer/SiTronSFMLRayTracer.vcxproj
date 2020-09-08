@@ -151,13 +151,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="InputHandler.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Player.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shaders\PostProcessingEffect_Frag.glsl" />
     <None Include="Resources\Shaders\PostProcessingEffect_Vert.glsl" />
     <None Include="Resources\Shaders\RayTracing_Frag.glsl" />
     <None Include="Resources\Shaders\RayTracing_Vert.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="InputHandler.h" />
+    <ClInclude Include="Player.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

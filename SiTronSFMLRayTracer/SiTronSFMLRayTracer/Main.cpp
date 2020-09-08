@@ -1,9 +1,14 @@
 #include <iostream>
-
 #include <SFML/Graphics.hpp>
+
+#include "Player.h"
+#include "InputHandler.h"
 
 int windowWidth = 1280;
 int windowHeight = 720;
+
+Player player;
+InputHandler inputHandler(player);
 
 int main()
 {
@@ -84,45 +89,42 @@ int main()
         while (window.pollEvent(event))
         {
             // Close window
-            if (event.type == sf::Event::Closed)
+            if (event.type == sf::Event::Closed || sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
                 window.close();
-
-            // Reload shader
-            /*if (sf::Keyboard::isKeyPressed(sf::Keyboard::LAlt) && sf::Keyboard::isKeyPressed(sf::Keyboard::Enter) && !reloadedShader)
-            {
-                reloadedShader = true;
-
-                std::cout << "Reloading shader..." << std::endl;
-                if (!shader.loadFromFile("Resources/Shaders/RayTracing_Vert.glsl", "Resources/Shaders/Raytracing_Frag.glsl"))
-                {
-                    std::cout << "Could not load ray tracing shaders..." << std::endl;
-
-                    return -1;
-                }
-            }
-            else if (!(sf::Keyboard::isKeyPressed(sf::Keyboard::LAlt) && sf::Keyboard::isKeyPressed(sf::Keyboard::Enter)))
-            {
-                reloadedShader = false;
-            }*/
         }
+
 
         float dt = deltaClock.restart().asSeconds();
         time += dt;
 
         std::cout << "FPS: " << (1.0f / dt) << std::endl;
 
+
+        inputHandler.Update(dt);
+        player.Update(dt);
+
+
         // Update shader
+
+        // Camera
+        rayTracingShader.setUniform("u_cameraPosition", player.GetPosition());
+        rayTracingShader.setUniform("u_cameraForwardDirection", player.GetForwardVector());
+
+        // Blocks
         rayTracingShader.setUniformArray("u_blockTextureRect", rects, 3);
         rayTracingShader.setUniformArray("u_blocks", blockPositions, 2);
         rayTracingShader.setUniform("u_textureSheet", textureSheet);
+
+        // Other shader uniforms
         rayTracingShader.setUniform("u_resolution", sf::Glsl::Vec2((float)windowWidth, (float)windowHeight));
         rayTracingShader.setUniform("u_time", time);
 
-        // Clear
-        window.clear();
+
+        // Clear window
+        //window.clear();
 
         // Render world to texture
-        renderTexture.clear(sf::Color::Red);
+        //renderTexture.clear(sf::Color::Red);
         renderTexture.draw(rect, &rayTracingShader);
         renderTexture.display();
 

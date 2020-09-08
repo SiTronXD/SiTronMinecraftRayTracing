@@ -4,6 +4,8 @@ const int NUM_MAX_BLOCKS = 2;
 
 const float MAX_RAY_DISTANCE = 64.0;
 
+uniform vec3 u_cameraPosition;
+uniform vec3 u_cameraForwardDirection;
 
 uniform sampler2D u_textureSheet;
 uniform vec4 u_blockTextureRect[3];
@@ -164,17 +166,14 @@ void main()
 	uv.x *= u_resolution.x / u_resolution.y;
 
 	// Create camera
-	vec3 cameraPosition = vec3(cos(u_time) * 2.0, 1.0 * sin(u_time), sin(u_time) * 2.0); // vec3(0.0, 1.0, -3.0);
-	vec3 cameraLookAt = vec3(0.0, 0.0, 0.0);
-
-	vec3 cameraForward = normalize(cameraLookAt - cameraPosition);
+	vec3 cameraForward = u_cameraForwardDirection;
 	vec3 cameraRight = normalize(cross(cameraForward, vec3(0.0, 1.0, 0.0)));
 	vec3 cameraUp = normalize(cross(cameraRight, cameraForward));
 
 	// Ray
 	float zoom = 1.0;
-	vec3 rayPosition = cameraPosition + zoom * cameraForward + uv.x * cameraRight + uv.y * cameraUp;
-	vec3 rayDirection = normalize(rayPosition - cameraPosition);
+	vec3 rayPosition = u_cameraPosition + zoom * cameraForward + uv.x * cameraRight + uv.y * cameraUp;
+	vec3 rayDirection = normalize(rayPosition - u_cameraPosition);
 
 	Ray r = createRay(rayPosition, rayDirection);
 
