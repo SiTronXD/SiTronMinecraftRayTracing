@@ -1,5 +1,6 @@
 #version 130
 
+const int NUM_MAX_RAY_BOUNCES = 2;
 const int NUM_MAX_BLOCKS = 2;
 
 const float MAX_RAY_DISTANCE = 64.0;
@@ -26,6 +27,7 @@ struct Ray
 
 	float currentT;
 
+	vec3 currentNormal;
 	vec3 currentColor;
 };
 
@@ -39,6 +41,7 @@ Ray createRay(vec3 _rayPosition, vec3 _rayDirection)
 
 	r.currentT = MAX_RAY_DISTANCE;
 
+	r.currentNormal = vec3(0.0);
 	r.currentColor = vec3(0.1);
 
 	return r;
@@ -90,6 +93,8 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner)
 			(u_blockTextureRect[1].x + tempUV.x * u_blockTextureRect[1].z) * oneOverTextureSize.x,
 			(u_blockTextureRect[1].y + tempUV.y * u_blockTextureRect[1].w) * oneOverTextureSize.y
 		);
+
+		r.currentNormal = vec3(t == t1 ? -1.0 : 1.0, 0.0, 0.0);
 	}
 	// Top or bottom
 	else if(t == t3 || t == t4)
@@ -102,6 +107,8 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner)
 				(u_blockTextureRect[0].x + tempUV.x * u_blockTextureRect[0].z) * oneOverTextureSize.x,
 				(u_blockTextureRect[0].y + tempUV.y * u_blockTextureRect[0].w) * oneOverTextureSize.y
 			);
+			
+			r.currentNormal = vec3(0.0, 1.0, 0.0);
 		}
 		else
 		{
@@ -109,6 +116,8 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner)
 				(u_blockTextureRect[2].x + tempUV.x * u_blockTextureRect[2].z) * oneOverTextureSize.x,
 				(u_blockTextureRect[2].y + tempUV.y * u_blockTextureRect[2].w) * oneOverTextureSize.y
 			);
+
+			r.currentNormal = vec3(0.0, -1.0, 0.0);
 		}
 	}
 	// Other sides
@@ -120,6 +129,8 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner)
 			(u_blockTextureRect[1].x + tempUV.x * u_blockTextureRect[1].z) * oneOverTextureSize.x,
 			(u_blockTextureRect[1].y + tempUV.y * u_blockTextureRect[1].w) * oneOverTextureSize.y
 		);
+		
+		r.currentNormal = vec3(0.0, 0.0, t == t5 ? -1.0 : 1.0);
 	}
 
 	r.currentT = t;
@@ -153,6 +164,7 @@ void raySphereIntersection(inout Ray r, vec3 spherePos, float sphereRadius)
 		vec3 normal = normalize(intersectionPoint - spherePos);
 
 		r.currentT = t;
+		r.currentNormal = normal;
 		r.currentColor = vec3(0.9, 0.0, 0.0) * dot(normalize(vec3(1.0, 1.0, -1.0)), normal);
 	}
 }
@@ -172,30 +184,32 @@ void main()
 
 	// Ray
 	float zoom = 1.0;
-	vec3 rayPosition = u_cameraPosition + zoom * cameraForward + uv.x * cameraRight + uv.y * cameraUp;
-	vec3 rayDirection = normalize(rayPosition - u_cameraPosition);
+	vec3 rayLookAtPosition = u_cameraPosition + zoom * cameraForward + uv.x * cameraRight + uv.y * cameraUp;
+	vec3 rayDirection = normalize(rayLookAtPosition - u_cameraPosition);
+
+	// Let the ray position be fairly close to the camera position
+	vec3 rayPosition = u_cameraPosition + rayDirection*0.1f; 
+
 
 	Ray r = createRay(rayPosition, rayDirection);
+	vec3 currentCol = vec3(0.0);
 
 	// Let the ray interact with the world
-	for(int i = 0; i < NUM_MAX_BLOCKS; i++)
+	for(int currentRay = 0; currentRay < NUM_MAX_RAY_BOUNCES; currentRay++)
 	{
-		rayBoxAABBIntersection(
-			r, 
-			u_blocks[i] + vec3(-0.5), 
-			u_blocks[i] + vec3(0.5)
-		);
+		for(int i = 0; i < NUM_MAX_BLOCKS; i++)
+		{
+			rayBoxAABBIntersection(
+				r, 
+				u_blocks[i] + vec3(-0.5), 
+				u_blocks[i] + vec3(0.5)
+			);
+		}
+		currentCol += r.currentColor * (currentRay + 1.0) / float(NUM_MAX_RAY_BOUNCES);
+
+		
+		r = createRay(r.rayPosition + r.rayDirection * r.currentT + r.currentNormal * 0.01f, reflect(rayDirection, r.currentNormal));
 	}
 
-	// Let the ray interact with the world
-	for(int i = 0; i < NUM_MAX_BLOCKS; i++)
-	{
-		rayBoxAABBIntersection(
-			r, 
-			u_blocks[i] + vec3(-0.5), 
-			u_blocks[i] + vec3(0.5)
-		);
-	}
-
-	gl_FragColor = vec4(r.currentColor, 1.0);
+	gl_FragColor = vec4(currentCol, 1.0);
 }

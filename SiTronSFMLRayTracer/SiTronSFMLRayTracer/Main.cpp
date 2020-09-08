@@ -1,20 +1,22 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 
+#include "SettingsHandler.h"
 #include "Player.h"
 #include "InputHandler.h"
 
-int windowWidth = 1280;
-int windowHeight = 720;
-
-Player player;
-InputHandler inputHandler(player);
-
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode(windowWidth, windowHeight), "SiTron Ray Tracer In SFML");
-    sf::RectangleShape rect(sf::Vector2f((float) windowWidth, (float) windowHeight));
+    SettingsHandler settingsHandler;
+
+
+    sf::RenderWindow window(sf::VideoMode(settingsHandler.GetWindowWidth(), settingsHandler.GetWindowHeight()), "SiTron Ray Tracer In SFML");
+    sf::RectangleShape rect(sf::Vector2f((float)settingsHandler.GetWindowWidth(), (float) settingsHandler.GetWindowHeight()));
     rect.setFillColor(sf::Color::Green);
+
+    Player player;
+    InputHandler inputHandler(player, window);
+
 
     // Check for shader availability
     if (!sf::Shader::isAvailable())
@@ -33,7 +35,7 @@ int main()
     {
         std::cout << "Could not load ray tracing shaders..." << std::endl;
 
-        getchar();
+        (void)getchar();
 
         return -1;
     }
@@ -46,7 +48,7 @@ int main()
     {
         std::cout << "Could not load post-processing shaders..." << std::endl;
 
-        getchar();
+        (void)getchar();
 
         return -1;
     }
@@ -75,7 +77,7 @@ int main()
     blockPositions[1] = sf::Glsl::Vec3(2, 0, 0);
 
     sf::RenderTexture renderTexture;
-    if (!renderTexture.create(windowWidth, windowHeight))
+    if (!renderTexture.create(settingsHandler.GetWindowWidth(), settingsHandler.GetWindowHeight()))
     {
         std::cout << "Couldn't create render texture" << std::endl;
 
@@ -116,7 +118,7 @@ int main()
         rayTracingShader.setUniform("u_textureSheet", textureSheet);
 
         // Other shader uniforms
-        rayTracingShader.setUniform("u_resolution", sf::Glsl::Vec2((float)windowWidth, (float)windowHeight));
+        rayTracingShader.setUniform("u_resolution", sf::Glsl::Vec2((float) settingsHandler.GetWindowWidth(), (float) settingsHandler.GetWindowHeight()));
         rayTracingShader.setUniform("u_time", time);
 
 
@@ -130,7 +132,7 @@ int main()
 
         // Render texture to screen with post-processing effect
         postProcessingShader.setUniform("u_mainTexture", renderTexture.getTexture());
-        postProcessingShader.setUniform("u_resolution", sf::Glsl::Vec2((float)windowWidth, (float)windowHeight));
+        postProcessingShader.setUniform("u_resolution", sf::Glsl::Vec2((float) settingsHandler.GetWindowWidth(), (float) settingsHandler.GetWindowHeight()));
         window.draw(rect, &postProcessingShader);
 
         // Display

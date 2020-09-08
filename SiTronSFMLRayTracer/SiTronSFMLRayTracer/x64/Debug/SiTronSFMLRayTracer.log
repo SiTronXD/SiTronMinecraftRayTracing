@@ -1,11 +1,5 @@
 ﻿  InputHandler.cpp
-D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\InputHandler.cpp(42,44): warning C4244: 'argument': conversion from 'int' to 'const float', possible loss of data
-D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\InputHandler.cpp(42,37): warning C4244: 'argument': conversion from 'int' to 'const float', possible loss of data
-D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\InputHandler.cpp(42,25): warning C4244: 'argument': conversion from 'int' to 'const float', possible loss of data
-D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\InputHandler.cpp(45,25): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\InputHandler.cpp(47,23): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\InputHandler.cpp(50,32): warning C4244: '*=': conversion from 'double' to 'float', possible loss of data
-D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\InputHandler.cpp(51,29): warning C4244: '*=': conversion from 'double' to 'float', possible loss of data
-  Main.cpp
-  Generating Code...
+D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\InputHandler.cpp(56,44): warning C4244: 'argument': conversion from 'int' to 'const float', possible loss of data
+D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\InputHandler.cpp(56,37): warning C4244: 'argument': conversion from 'int' to 'const float', possible loss of data
+D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\InputHandler.cpp(56,25): warning C4244: 'argument': conversion from 'int' to 'const float', possible loss of data
   SiTronSFMLRayTracer.vcxproj -> D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\x64\Debug\SiTronSFMLRayTracer.exe
