@@ -23,13 +23,13 @@ void Player::Update(const float _dt)
 void Player::MovePosition(const float _forwardDir, const float _upDir, const float _rightDir, const float _dt)
 {
 	// Ignore the y-component and normalize the flat vector
-	sf::Vector3f tempForwardVector = cameraForwardVector;
-	tempForwardVector.y = 0.0f;
-	tempForwardVector /= sqrt(tempForwardVector.x * tempForwardVector.x + tempForwardVector.z * tempForwardVector.z);
+	//sf::Vector3f tempForwardVector = cameraForwardVector;
+	//tempForwardVector.y = 0.0f;
+	//tempForwardVector /= sqrt(tempForwardVector.x * tempForwardVector.x + tempForwardVector.z * tempForwardVector.z);
 
 	position += cameraRightVector * _rightDir * movementSpeed * _dt;
 	position += cameraUpVector * _upDir * movementSpeed * _dt;
-	position += tempForwardVector * _forwardDir * movementSpeed * _dt;
+	position += cameraForwardVector * _forwardDir * movementSpeed * _dt;
 }
 
 void Player::RotateDirection(const float _horizontalAngleDir, const float _verticalAngleDir)

@@ -3,6 +3,7 @@
 
 #include "SettingsHandler.h"
 #include "Player.h"
+#include "WorldHandler.h"
 #include "InputHandler.h"
 
 int main()
@@ -15,6 +16,7 @@ int main()
     rect.setFillColor(sf::Color::Green);
 
     Player player;
+    WorldHandler worldHandler;
     InputHandler inputHandler(player, window);
 
 
@@ -72,9 +74,10 @@ int main()
     rects[2] = sf::Glsl::Vec4(32, 0, 16, 16);   // Dirt block - down
 
     // Blocks
-    sf::Glsl::Vec3 blockPositions[2];
-    blockPositions[0] = sf::Glsl::Vec3(0, 0, 0);
-    blockPositions[1] = sf::Glsl::Vec3(2, 0, 0);
+    worldHandler.AddBlock(sf::Vector3i(0, 0, 0), BlockType::Grass);
+    worldHandler.AddBlock(sf::Vector3i(1, 1, 0), BlockType::Grass);
+    worldHandler.AddBlock(sf::Vector3i(2, 0, 0), BlockType::Grass);
+    worldHandler.AddBlock(sf::Vector3i(4, -1, 0), BlockType::Grass);
 
     sf::RenderTexture renderTexture;
     if (!renderTexture.create(settingsHandler.GetWindowWidth(), settingsHandler.GetWindowHeight()))
@@ -106,6 +109,15 @@ int main()
         player.Update(dt);
 
 
+        sf::Glsl::Vec3 blockPositions[4];
+        std::vector<sf::Vector3i> blocksToRender = worldHandler.GetBlocksToRender();
+        for (int i = 0; i < 4; i++)
+        {
+            blockPositions[i].x = (float) blocksToRender[i].x;
+            blockPositions[i].y = (float) blocksToRender[i].y;
+            blockPositions[i].z = (float) blocksToRender[i].z;
+        }
+
         // Update shader
 
         // Camera
@@ -114,7 +126,7 @@ int main()
 
         // Blocks
         rayTracingShader.setUniformArray("u_blockTextureRect", rects, 3);
-        rayTracingShader.setUniformArray("u_blocks", blockPositions, 2);
+        rayTracingShader.setUniformArray("u_blocks", blockPositions, 4);
         rayTracingShader.setUniform("u_textureSheet", textureSheet);
 
         // Other shader uniforms

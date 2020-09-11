@@ -1,7 +1,7 @@
 #version 130
 
-const int NUM_MAX_RAY_BOUNCES = 2;
-const int NUM_MAX_BLOCKS = 2;
+const int NUM_MAX_RAY_BOUNCES = 1;
+const int NUM_MAX_BLOCKS = 4;
 
 const float MAX_RAY_DISTANCE = 64.0;
 
