@@ -21,6 +21,7 @@ public:
 	~WorldHandler();
 
 	void AddBlock(sf::Vector3i blockPos, BlockType blockType);
+	void RemoveBlock(sf::Vector3i blockPos);
 
 	std::vector<sf::Vector3i> GetBlocksToRender();
 };

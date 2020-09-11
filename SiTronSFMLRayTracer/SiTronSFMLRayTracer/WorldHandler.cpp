@@ -26,14 +26,25 @@ WorldHandler::~WorldHandler()
 
 void WorldHandler::AddBlock(sf::Vector3i blockPos, BlockType blockType)
 {
+	// Remove current block
+	RemoveBlock(blockPos);
+
+
 	std::string blocksKey = FromPosToKey(blockPos);
 	
-
 	blocks[blocksKey] = new Block(blockPos, blockType);
 
 	indexToBlockPos[currentBlockIndex] = blocksKey;
 
 	currentBlockIndex++;
+}
+
+void WorldHandler::RemoveBlock(sf::Vector3i blockPos)
+{
+	std::string blocksKey = FromPosToKey(blockPos);
+
+	delete blocks[blocksKey];
+	blocks.erase(blocksKey);
 }
 
 std::vector<sf::Vector3i> WorldHandler::GetBlocksToRender()
