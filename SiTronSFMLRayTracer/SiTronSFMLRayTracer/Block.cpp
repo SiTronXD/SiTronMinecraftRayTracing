@@ -15,3 +15,8 @@ const sf::Vector3i& Block::GetPosition() const
 {
 	return position;
 }
+
+const int Block::GetBlockTypeIndex() const
+{
+	return (int) blockType;
+}

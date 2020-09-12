@@ -61,10 +61,10 @@ void Player::PlaceBlock()
 	Hit bestHit;
 
 	// Let ray intersect with the blocks
-	std::vector<sf::Vector3i> blocksToCheck = worldHandler.GetBlocksToRender();
+	std::vector<Block*> blocksToCheck = worldHandler.GetBlocksToRender();
 	for (int i = 0; i < blocksToCheck.size(); i++)
 	{
-		Hit tempHit = ray.GetClosestBoxHit(blocksToCheck[i]);
+		Hit tempHit = ray.GetClosestBoxHit(blocksToCheck[i]->GetPosition());
 
 		// Find the closest hit
 		bestHit = Hit::getClosestHit(bestHit, tempHit);
@@ -89,10 +89,10 @@ void Player::RemoveBlock()
 	Hit bestHit;
 
 	// Let ray intersect with the blocks
-	std::vector<sf::Vector3i> blocksToCheck = worldHandler.GetBlocksToRender();
+	std::vector<Block*> blocksToCheck = worldHandler.GetBlocksToRender();
 	for (int i = 0; i < blocksToCheck.size(); i++)
 	{
-		Hit tempHit = ray.GetClosestBoxHit(blocksToCheck[i]);
+		Hit tempHit = ray.GetClosestBoxHit(blocksToCheck[i]->GetPosition());
 
 		// Find the closest hit
 		bestHit = Hit::getClosestHit(bestHit, tempHit);

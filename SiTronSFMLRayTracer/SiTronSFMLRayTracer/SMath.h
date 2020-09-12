@@ -14,6 +14,8 @@ private:
 	static float perlinNoiseLayer(const float x, const float y);
 
 public:
+	static float min(const float _val1, const float _val2);
+	static float max(const float _val1, const float _val2);
 	static float clamp(const float _val, const float _min, const float _max);
 
 	static void vectorCross(const sf::Vector3f& vectorA, const sf::Vector3f& vectorB, sf::Vector3f& resultVector);

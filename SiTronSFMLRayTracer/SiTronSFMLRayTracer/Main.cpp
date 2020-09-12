@@ -82,10 +82,15 @@ int main()
     sf::Clock deltaClock;
 
     // Textures
-    sf::Glsl::Vec4 rects[3];
-    rects[0] = sf::Glsl::Vec4(0, 0, 16, 16);    // Dirt block - up
-    rects[1] = sf::Glsl::Vec4(48, 0, 16, 16);   // Dirt block - side
-    rects[2] = sf::Glsl::Vec4(32, 0, 16, 16);   // Dirt block - down
+    const int MAX_NUM_TEXTURE_RECTS = 6;
+    sf::Glsl::Vec4 rects[MAX_NUM_TEXTURE_RECTS];
+    rects[0 + 0] = sf::Glsl::Vec4(0, 0, 16, 16);    // Dirt block - up
+    rects[0 + 1] = sf::Glsl::Vec4(48, 0, 16, 16);   // Dirt block - side
+    rects[0 + 2] = sf::Glsl::Vec4(32, 0, 16, 16);   // Dirt block - down
+
+    rects[3 + 0] = sf::Glsl::Vec4(16, 0, 16, 16);   // Stone block - up
+    rects[3 + 1] = sf::Glsl::Vec4(16, 0, 16, 16);   // Stone block - side
+    rects[3 + 2] = sf::Glsl::Vec4(16, 0, 16, 16);   // Stone block - down
 
     // Blocks
     //worldHandler.AddBlock(sf::Vector3i(2, 0, 0), BlockType::Grass);
@@ -98,9 +103,7 @@ int main()
             float noiseZ = z / 1000.0;
             float y = floor(SMath::perlinNoise(noiseX, noiseZ) * 5.0) - 2;
 
-            std::cout << noiseX << "  " << noiseZ << std::endl;
-
-            worldHandler.AddBlock(sf::Vector3i(x - 8, y, z - 8), BlockType::Grass);
+            worldHandler.AddBlock(sf::Vector3i(x - 8, y, z - 8), BlockType::Stone);
         }
     }
 
@@ -128,25 +131,23 @@ int main()
         float dt = deltaClock.restart().asSeconds();
         time += dt;
 
-        //std::cout << "FPS: " << (1.0f / dt) << std::endl;
+        std::cout << "FPS: " << (1.0f / dt) << std::endl;
 
 
         inputHandler.Update(dt);
         player.Update(dt);
 
         // Find all blocks to render
-        std::vector<sf::Vector3i> blocksToRender = worldHandler.GetBlocksToRender();
+        std::vector<Block*> blocksToRender = worldHandler.GetBlocksToRender();
 
-        const int maxBlockPositions = 256;
-        sf::Glsl::Vec3 blockPositions[maxBlockPositions];
-        float blockIsValid[maxBlockPositions];
-        for (int i = 0; i < maxBlockPositions; i++)
+        const int maxBlocks = 256;
+        sf::Glsl::Vec3 blockPositions[maxBlocks];
+        float blockIndices[maxBlocks];
+        int numValidBlocks = SMath::min(256, blocksToRender.size());
+        for (int i = 0; i < numValidBlocks; i++)
         {
-            blockIsValid[i] = i < blocksToRender.size();
-            if (!blockIsValid[i])
-                continue;
-
-            blockPositions[i] = (sf::Glsl::Vec3) blocksToRender[i];
+            blockPositions[i] = (sf::Glsl::Vec3) blocksToRender[i]->GetPosition();
+            blockIndices[i] = blocksToRender[i]->GetBlockTypeIndex();
         }
 
         // Package camera vectors into camera matrix
@@ -170,9 +171,10 @@ int main()
         rayTracingShader.setUniform("u_cameraRot", cameraRot);
 
         // Blocks
-        rayTracingShader.setUniformArray("u_blockIsValid", blockIsValid, maxBlockPositions);
-        rayTracingShader.setUniformArray("u_blockTextureRect", rects, 3);
-        rayTracingShader.setUniformArray("u_blocks", blockPositions, maxBlockPositions);
+        rayTracingShader.setUniformArray("u_blockTextureRect", rects, MAX_NUM_TEXTURE_RECTS);
+        rayTracingShader.setUniformArray("u_blocks", blockPositions, maxBlocks);
+        rayTracingShader.setUniformArray("u_blockIndex", blockIndices, maxBlocks);
+        rayTracingShader.setUniform("u_numValidBlocks", numValidBlocks);
         rayTracingShader.setUniform("u_textureSheet", textureSheet);
 
         // Other shader uniforms

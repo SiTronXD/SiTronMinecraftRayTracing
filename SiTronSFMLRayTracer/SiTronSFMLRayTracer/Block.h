@@ -4,8 +4,8 @@
 
 enum class BlockType
 {
-	Grass,
-	Stone
+	Grass = 0,
+	Stone = 1
 };
 
 class Block
@@ -20,5 +20,7 @@ public:
 	~Block();
 
 	const sf::Vector3i& GetPosition() const;
+
+	const int GetBlockTypeIndex() const;
 
 };

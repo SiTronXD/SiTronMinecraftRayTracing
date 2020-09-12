@@ -59,6 +59,16 @@ float SMath::perlinNoiseLayer(const float x, const float y)
 	return finalMix;
 }
 
+float SMath::min(const float _val1, const float _val2)
+{
+	return _val1 < _val2 ? _val1 : _val2;
+}
+
+float SMath::max(const float _val1, const float _val2)
+{
+	return _val1 > _val2 ? _val1 : _val2;
+}
+
 // Returns the value clamped within an interwall.
 float SMath::clamp(const float _val, const float _min, const float _max)
 {

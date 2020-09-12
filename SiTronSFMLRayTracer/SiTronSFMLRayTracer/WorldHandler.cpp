@@ -43,14 +43,14 @@ void WorldHandler::RemoveBlock(sf::Vector3i blockPos)
 	blocks.erase(blocksKey);
 }
 
-std::vector<sf::Vector3i> WorldHandler::GetBlocksToRender()
+std::vector<Block*> WorldHandler::GetBlocksToRender()
 {
-	std::vector<sf::Vector3i> tempBlocksToRender;
+	std::vector<Block*> tempBlocksToRender;
 	tempBlocksToRender.reserve(blocks.size());
 
 	std::for_each(blocks.begin(), blocks.end(), [&](std::pair<const std::string, Block*> & element)
 	{
-		tempBlocksToRender.push_back(element.second->GetPosition());
+		tempBlocksToRender.push_back(element.second);
 	});
 
 	return tempBlocksToRender;

@@ -2,10 +2,13 @@
 
 const int NUM_MAX_RAY_BOUNCES = 1;
 const int NUM_MAX_BLOCKS = 256;
+const int NUM_MAX_TEXTURERECTS = 6;
+
+uniform int u_numValidBlocks;
 
 const float MAX_RAY_DISTANCE = 64.0;
 
-uniform float u_blockIsValid[NUM_MAX_BLOCKS];
+uniform float u_blockIndex[NUM_MAX_BLOCKS];
 
 uniform vec2 u_resolution;
 
@@ -14,7 +17,7 @@ uniform vec3 u_blocks[NUM_MAX_BLOCKS];
 
 uniform mat3x3 u_cameraRot;
 
-uniform vec4 u_blockTextureRect[3];
+uniform vec4 u_blockTextureRect[NUM_MAX_TEXTURERECTS];
 
 uniform sampler2D u_textureSheet;
 
@@ -44,7 +47,7 @@ Ray createRay(vec3 _rayPosition, vec3 _rayDirection)
 
 	r.currentT = MAX_RAY_DISTANCE;
 
-	r.currentNormal = vec3(0.0);
+	r.currentNormal = vec3(0.0, 1.0, 0.0);
 	r.currentColor = vec3(0.1);
 
 	return r;
@@ -56,7 +59,7 @@ float squaredLength(vec3 p)
 	return p.x*p.x + p.y*p.y + p.z*p.z;
 }
 
-void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner)
+void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner, int blockIndex)
 {
 	float t1 = (minCorner.x - r.rayPosition.x) * r.oneOverRayDirection.x;
 	float t2 = (maxCorner.x - r.rayPosition.x) * r.oneOverRayDirection.x;
@@ -87,14 +90,16 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner)
 
 	vec2 tempUV = vec2(0.0);
 
+	int textureIndexOffset = 3 * blockIndex;
+
 	// Horizontal sides
 	if(t == t1 || t == t2)
 	{
 		tempUV = vec2(intersectionPoint.z, intersectionPoint.y);
 
 		tempUV = vec2(
-			(u_blockTextureRect[1].x + tempUV.x * u_blockTextureRect[1].z) * oneOverTextureSize.x,
-			(u_blockTextureRect[1].y + tempUV.y * u_blockTextureRect[1].w) * oneOverTextureSize.y
+			(u_blockTextureRect[textureIndexOffset + 1].x + tempUV.x * u_blockTextureRect[textureIndexOffset + 1].z) * oneOverTextureSize.x,
+			(u_blockTextureRect[textureIndexOffset + 1].y + tempUV.y * u_blockTextureRect[textureIndexOffset + 1].w) * oneOverTextureSize.y
 		);
 
 		r.currentNormal = vec3(t == t1 ? -1.0 : 1.0, 0.0, 0.0);
@@ -107,8 +112,8 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner)
 		if(worldIntersectionPoint.y - minCorner.y >= 0.5)
 		{
 			tempUV = vec2(
-				(u_blockTextureRect[0].x + tempUV.x * u_blockTextureRect[0].z) * oneOverTextureSize.x,
-				(u_blockTextureRect[0].y + tempUV.y * u_blockTextureRect[0].w) * oneOverTextureSize.y
+				(u_blockTextureRect[textureIndexOffset + 0].x + tempUV.x * u_blockTextureRect[textureIndexOffset + 0].z) * oneOverTextureSize.x,
+				(u_blockTextureRect[textureIndexOffset + 0].y + tempUV.y * u_blockTextureRect[textureIndexOffset + 0].w) * oneOverTextureSize.y
 			);
 			
 			r.currentNormal = vec3(0.0, 1.0, 0.0);
@@ -116,8 +121,8 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner)
 		else
 		{
 			tempUV = vec2(
-				(u_blockTextureRect[2].x + tempUV.x * u_blockTextureRect[2].z) * oneOverTextureSize.x,
-				(u_blockTextureRect[2].y + tempUV.y * u_blockTextureRect[2].w) * oneOverTextureSize.y
+				(u_blockTextureRect[textureIndexOffset + 2].x + tempUV.x * u_blockTextureRect[textureIndexOffset + 2].z) * oneOverTextureSize.x,
+				(u_blockTextureRect[textureIndexOffset + 2].y + tempUV.y * u_blockTextureRect[textureIndexOffset + 2].w) * oneOverTextureSize.y
 			);
 
 			r.currentNormal = vec3(0.0, -1.0, 0.0);
@@ -129,8 +134,8 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner)
 		tempUV = vec2(intersectionPoint.x, intersectionPoint.y);
 
 		tempUV = vec2(
-			(u_blockTextureRect[1].x + tempUV.x * u_blockTextureRect[1].z) * oneOverTextureSize.x,
-			(u_blockTextureRect[1].y + tempUV.y * u_blockTextureRect[1].w) * oneOverTextureSize.y
+			(u_blockTextureRect[textureIndexOffset + 1].x + tempUV.x * u_blockTextureRect[textureIndexOffset + 1].z) * oneOverTextureSize.x,
+			(u_blockTextureRect[textureIndexOffset + 1].y + tempUV.y * u_blockTextureRect[textureIndexOffset + 1].w) * oneOverTextureSize.y
 		);
 		
 		r.currentNormal = vec3(0.0, 0.0, t == t5 ? -1.0 : 1.0);
@@ -172,6 +177,25 @@ void raySphereIntersection(inout Ray r, vec3 spherePos, float sphereRadius)
 	}
 }
 
+vec3 GetSkyboxColor(vec3 rayDirection)
+{
+	float t = (rayDirection.y*1.2 + 1.0f) * 0.5f;
+	t = clamp(t, 0.0, 1.0);
+
+	vec3 topColor = vec3(0.85, 0.85, 0.95);
+	vec3 bottomColor = vec3(0.4, 0.4, 0.7);
+	vec3 skyColor = mix(bottomColor, topColor, t);
+	vec3 sunColor = vec3(0.98, 0.93, 0.6);
+
+	float isSun = 0.0;
+	isSun = smoothstep(0.97, 1.0, dot(rayDirection, normalize(vec3(1.0))));
+	isSun = pow(isSun, 3.0);
+
+	vec3 col = mix(skyColor, sunColor, isSun);
+
+	return col;
+}
+
 void main()
 {
 	// UV coordinates
@@ -200,22 +224,30 @@ void main()
 	// Let the ray interact with the world
 	for(int currentRay = 0; currentRay < NUM_MAX_RAY_BOUNCES; currentRay++)
 	{
-		for(int i = 0; i < NUM_MAX_BLOCKS; i++)
-		{
-			// Block does not exist
-			if(u_blockIsValid[i] == 0.0)
-				continue;
+		if(currentRay > 0)
+			r = createRay(r.rayPosition + r.rayDirection * r.currentT + r.currentNormal * 0.01f, reflect(rayDirection, r.currentNormal));
 
+		for(int i = 0; i < u_numValidBlocks; i++)
+		{
 			rayBoxAABBIntersection(
 				r, 
 				u_blocks[i] + vec3(-0.5), 
-				u_blocks[i] + vec3(0.5)
+				u_blocks[i] + vec3(0.5),
+				int(u_blockIndex[i])
 			);
 		}
-		currentCol += r.currentColor * (currentRay + 1.0) / float(NUM_MAX_RAY_BOUNCES);
-
 		
-		r = createRay(r.rayPosition + r.rayDirection * r.currentT + r.currentNormal * 0.01f, reflect(rayDirection, r.currentNormal));
+		// Ray hit nothing
+		if(r.currentT >= MAX_RAY_DISTANCE)
+			break;
+
+		currentCol += r.currentColor * (currentRay + 1.0) / float(NUM_MAX_RAY_BOUNCES);
+	}
+
+	// Ray didn't hit anything
+	if(r.currentT >= MAX_RAY_DISTANCE)
+	{
+		currentCol = GetSkyboxColor(r.rayDirection);
 	}
 
 	gl_FragColor = vec4(currentCol, 1.0);
