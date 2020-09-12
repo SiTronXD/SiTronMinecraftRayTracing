@@ -12,7 +12,7 @@ std::string WorldHandler::FromPosToKey(sf::Vector3i position)
 
 WorldHandler::WorldHandler()
 {
-	currentBlockIndex = 0;
+
 }
 
 WorldHandler::~WorldHandler()
@@ -33,10 +33,6 @@ void WorldHandler::AddBlock(sf::Vector3i blockPos, BlockType blockType)
 	std::string blocksKey = FromPosToKey(blockPos);
 	
 	blocks[blocksKey] = new Block(blockPos, blockType);
-
-	indexToBlockPos[currentBlockIndex] = blocksKey;
-
-	currentBlockIndex++;
 }
 
 void WorldHandler::RemoveBlock(sf::Vector3i blockPos)
@@ -50,9 +46,12 @@ void WorldHandler::RemoveBlock(sf::Vector3i blockPos)
 std::vector<sf::Vector3i> WorldHandler::GetBlocksToRender()
 {
 	std::vector<sf::Vector3i> tempBlocksToRender;
+	tempBlocksToRender.reserve(blocks.size());
 
-	for(int i = 0; i < currentBlockIndex; i++)
-		tempBlocksToRender.push_back((*blocks[indexToBlockPos[i]]).GetPosition());
+	std::for_each(blocks.begin(), blocks.end(), [&](std::pair<const std::string, Block*> & element)
+	{
+		tempBlocksToRender.push_back(element.second->GetPosition());
+	});
 
 	return tempBlocksToRender;
 }

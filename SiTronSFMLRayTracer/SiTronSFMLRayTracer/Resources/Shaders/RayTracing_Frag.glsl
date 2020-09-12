@@ -1,20 +1,24 @@
 #version 130
 
 const int NUM_MAX_RAY_BOUNCES = 1;
-const int NUM_MAX_BLOCKS = 4;
+const int NUM_MAX_BLOCKS = 256;
 
 const float MAX_RAY_DISTANCE = 64.0;
 
-uniform vec3 u_cameraPosition;
-uniform vec3 u_cameraForwardDirection;
-
-uniform sampler2D u_textureSheet;
-uniform vec4 u_blockTextureRect[3];
-
-uniform vec3 u_blocks[NUM_MAX_BLOCKS];
+uniform float u_time;
+uniform float u_blockIsValid[NUM_MAX_BLOCKS];
 
 uniform vec2 u_resolution;
-uniform float u_time;
+
+uniform vec3 u_cameraPosition;
+uniform vec3 u_blocks[NUM_MAX_BLOCKS];
+
+uniform mat3x3 u_cameraRot;
+
+uniform vec4 u_blockTextureRect[3];
+
+uniform sampler2D u_textureSheet;
+
 
 vec2 oneOverTextureSize = vec2(1.0) / textureSize(u_textureSheet, 0).xy;
 
@@ -178,9 +182,9 @@ void main()
 	uv.x *= u_resolution.x / u_resolution.y;
 
 	// Create camera
-	vec3 cameraForward = u_cameraForwardDirection;
-	vec3 cameraRight = normalize(cross(cameraForward, vec3(0.0, 1.0, 0.0)));
-	vec3 cameraUp = normalize(cross(cameraRight, cameraForward));
+	vec3 cameraRight = u_cameraRot[0];
+	vec3 cameraUp = u_cameraRot[1];
+	vec3 cameraForward = u_cameraRot[2];
 
 	// Ray
 	float zoom = 1.0;
@@ -199,6 +203,10 @@ void main()
 	{
 		for(int i = 0; i < NUM_MAX_BLOCKS; i++)
 		{
+			// Block does not exist
+			if(u_blockIsValid[i] == 0.0)
+				continue;
+
 			rayBoxAABBIntersection(
 				r, 
 				u_blocks[i] + vec3(-0.5), 

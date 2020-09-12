@@ -152,9 +152,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Block.cpp" />
+    <ClCompile Include="Hit.cpp" />
     <ClCompile Include="InputHandler.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="Ray.cpp" />
     <ClCompile Include="SettingsHandler.cpp" />
     <ClCompile Include="SMath.cpp" />
     <ClCompile Include="WorldHandler.cpp" />
@@ -167,8 +169,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Block.h" />
+    <ClInclude Include="Hit.h" />
     <ClInclude Include="InputHandler.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="Ray.h" />
     <ClInclude Include="SettingsHandler.h" />
     <ClInclude Include="SMath.h" />
     <ClInclude Include="WorldHandler.h" />

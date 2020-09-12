@@ -10,9 +10,6 @@ class WorldHandler
 {
 private:
 	std::map<std::string, Block*> blocks;
-	std::map<int, std::string> indexToBlockPos;
-
-	int currentBlockIndex;
 
 	std::string FromPosToKey(sf::Vector3i position);
 

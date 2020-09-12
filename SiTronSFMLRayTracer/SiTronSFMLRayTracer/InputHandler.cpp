@@ -44,6 +44,21 @@ void InputHandler::Update(const float _dt)
     }
     lastPressedTab = sf::Keyboard::isKeyPressed(sf::Keyboard::Tab);
 
+    // Player placed block
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && !lastPressedMouse1)
+    {
+        player.PlaceBlock();
+    }
+    lastPressedMouse1 = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
+
+    // Player removed block
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right) && !lastPressedMouse2)
+    {
+        player.RemoveBlock();
+    }
+    lastPressedMouse2 = sf::Mouse::isButtonPressed(sf::Mouse::Button::Right);
+
+
     // Player input for movement
     int forwardDir = sf::Keyboard::isKeyPressed(sf::Keyboard::W) - 
         sf::Keyboard::isKeyPressed(sf::Keyboard::S);
@@ -54,7 +69,6 @@ void InputHandler::Update(const float _dt)
 
     // Move player
     player.MovePosition(forwardDir, upDir, rightDir, _dt);
-
 
     // Player mouse look
     if (lockMouse)

@@ -17,6 +17,8 @@ private:
 
 	bool lockMouse;
 	bool lastPressedTab;
+	bool lastPressedMouse1;
+	bool lastPressedMouse2;
 
 public:
 	InputHandler(Player& _player, sf::Window& _window);

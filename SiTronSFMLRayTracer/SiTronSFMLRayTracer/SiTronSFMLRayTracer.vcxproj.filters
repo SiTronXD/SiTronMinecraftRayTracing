@@ -16,6 +16,9 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{742cce8a-e733-4d15-bb04-f91d8c275d8a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine">
+      <UniqueIdentifier>{34e08f95-9660-4867-82ac-53d245ec8ff5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -30,14 +33,20 @@
     <ClCompile Include="SettingsHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SMath.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="WorldHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Block.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Hit.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Ray.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="SMath.cpp">
+      <Filter>Engine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -64,14 +73,20 @@
     <ClInclude Include="SettingsHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SMath.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="WorldHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Block.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Hit.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Ray.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="SMath.h">
+      <Filter>Engine</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
