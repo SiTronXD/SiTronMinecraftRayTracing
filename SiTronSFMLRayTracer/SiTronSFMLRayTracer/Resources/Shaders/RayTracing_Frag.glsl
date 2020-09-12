@@ -5,7 +5,6 @@ const int NUM_MAX_BLOCKS = 256;
 
 const float MAX_RAY_DISTANCE = 64.0;
 
-uniform float u_time;
 uniform float u_blockIsValid[NUM_MAX_BLOCKS];
 
 uniform vec2 u_resolution;

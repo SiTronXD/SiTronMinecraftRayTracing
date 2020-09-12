@@ -88,8 +88,22 @@ int main()
     rects[2] = sf::Glsl::Vec4(32, 0, 16, 16);   // Dirt block - down
 
     // Blocks
-    //worldHandler.AddBlock(sf::Vector3i(0, 0, 0), BlockType::Grass);
-    worldHandler.AddBlock(sf::Vector3i(2, 0, 0), BlockType::Grass);
+    //worldHandler.AddBlock(sf::Vector3i(2, 0, 0), BlockType::Grass);
+
+    for (int x = 0; x < 16; x++)
+    {
+        for (int z = 0; z < 16; z++)
+        {
+            float noiseX = x / 1000.0;
+            float noiseZ = z / 1000.0;
+            float y = floor(SMath::perlinNoise(noiseX, noiseZ) * 5.0) - 2;
+
+            std::cout << noiseX << "  " << noiseZ << std::endl;
+
+            worldHandler.AddBlock(sf::Vector3i(x - 8, y, z - 8), BlockType::Grass);
+        }
+    }
+
 
     sf::RenderTexture renderTexture;
     if (!renderTexture.create(settingsHandler.GetWindowWidth(), settingsHandler.GetWindowHeight()))
@@ -163,7 +177,7 @@ int main()
 
         // Other shader uniforms
         rayTracingShader.setUniform("u_resolution", sf::Glsl::Vec2((float) settingsHandler.GetWindowWidth(), (float) settingsHandler.GetWindowHeight()));
-        rayTracingShader.setUniform("u_time", time);
+        //rayTracingShader.setUniform("u_time", time);
 
 
         // Clear window

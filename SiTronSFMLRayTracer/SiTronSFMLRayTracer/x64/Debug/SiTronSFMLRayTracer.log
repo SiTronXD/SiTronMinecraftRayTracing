@@ -1,2 +1,10 @@
 ﻿  Main.cpp
+D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\Main.cpp(97,26): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\Main.cpp(98,26): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\Main.cpp(99,21): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\Main.cpp(103,55): warning C4244: 'argument': conversion from 'float' to 'T', possible loss of data
+          with
+          [
+              T=int
+          ]
   SiTronSFMLRayTracer.vcxproj -> D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\x64\Debug\SiTronSFMLRayTracer.exe
