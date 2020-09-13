@@ -22,21 +22,23 @@ private:
 
 	const float movementSpeed = 5.0f;
 
+	BlockType currentPlaceBlockType;
+
 public:
 	Player(WorldHandler& _worldHandler);
 	~Player();
 
-	void Update(const float _dt);
+	void movePosition(const float _forwardDir, const float _upDir, const float _rightDir, const float _dt);
+	void rotateDirection(const float _horizontalAngleDir, const float _verticalAngleDir);
 
-	void MovePosition(const float _forwardDir, const float _upDir, const float _rightDir, const float _dt);
-	void RotateDirection(const float _horizontalAngleDir, const float _verticalAngleDir);
+	void setCurrentPlaceBlockType(const BlockType _newBlockType);
 
-	void PlaceBlock();
-	void RemoveBlock();
+	void placeBlock();
+	void removeBlock();
 
-	const sf::Vector3f& GetPosition() const;
-	const sf::Vector2f& GetDirection() const;
-	const sf::Vector3f& GetForwardVector() const;
-	const sf::Vector3f& GetUpVector() const;
-	const sf::Vector3f& GetRightVector() const;
+	const sf::Vector3f& getPosition() const;
+	const sf::Vector2f& getDirection() const;
+	const sf::Vector3f& getForwardVector() const;
+	const sf::Vector3f& getUpVector() const;
+	const sf::Vector3f& getRightVector() const;
 };

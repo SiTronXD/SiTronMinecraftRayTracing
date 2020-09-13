@@ -6,8 +6,11 @@ InputHandler::InputHandler(Player& _player, sf::Window& _window)
     screenMiddlePos = sf::Vector2i(sf::VideoMode::getDesktopMode().width / 2, sf::VideoMode::getDesktopMode().height / 2);
     lastMousePosition = sf::Mouse::getPosition();
 
-    lockMouse = true;
     lastPressedTab = false;
+    lastPressedMouse1 = false;
+    lastPressedMouse2 = false;
+
+    lockMouse = true;
     window.setMouseCursorVisible(!lockMouse);
 }
 
@@ -47,17 +50,26 @@ void InputHandler::Update(const float _dt)
     // Player placed block
     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && !lastPressedMouse1)
     {
-        player.PlaceBlock();
+        player.placeBlock();
     }
     lastPressedMouse1 = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
 
     // Player removed block
     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right) && !lastPressedMouse2)
     {
-        player.RemoveBlock();
+        player.removeBlock();
     }
     lastPressedMouse2 = sf::Mouse::isButtonPressed(sf::Mouse::Button::Right);
 
+    // Player current place block
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1))
+        player.setCurrentPlaceBlockType(BlockType::Grass);
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2))
+        player.setCurrentPlaceBlockType(BlockType::Stone);
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num3))
+        player.setCurrentPlaceBlockType(BlockType::RedstoneBlock);
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num4))
+        player.setCurrentPlaceBlockType(BlockType::Mirror);
 
     // Player input for movement
     int forwardDir = sf::Keyboard::isKeyPressed(sf::Keyboard::W) - 
@@ -68,7 +80,7 @@ void InputHandler::Update(const float _dt)
         sf::Keyboard::isKeyPressed(sf::Keyboard::A);
 
     // Move player
-    player.MovePosition(forwardDir, upDir, rightDir, _dt);
+    player.movePosition((float) forwardDir, (float) upDir, (float) rightDir, _dt);
 
     // Player mouse look
     if (lockMouse)
@@ -84,6 +96,6 @@ void InputHandler::Update(const float _dt)
         lastMousePosition = sf::Mouse::getPosition();
 
         // Rotate player
-        player.RotateDirection(deltaMousePosition.x, deltaMousePosition.y);
+        player.rotateDirection(deltaMousePosition.x, deltaMousePosition.y);
     }
 }

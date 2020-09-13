@@ -1,8 +1,8 @@
 #version 130
 
-const int NUM_MAX_RAY_BOUNCES = 1;
+const int NUM_MAX_RAY_BOUNCES = 3;
 const int NUM_MAX_BLOCKS = 256;
-const int NUM_MAX_TEXTURERECTS = 6;
+const int NUM_MAX_TEXTURERECTS = 12;
 
 uniform int u_numValidBlocks;
 
@@ -33,6 +33,8 @@ struct Ray
 
 	float currentT;
 
+	int currentBlockIndex;
+
 	vec3 currentNormal;
 	vec3 currentColor;
 };
@@ -46,6 +48,8 @@ Ray createRay(vec3 _rayPosition, vec3 _rayDirection)
 	r.oneOverRayDirection = 1.0 / _rayDirection;
 
 	r.currentT = MAX_RAY_DISTANCE;
+
+	r.currentBlockIndex = -1;
 
 	r.currentNormal = vec3(0.0, 1.0, 0.0);
 	r.currentColor = vec3(0.1);
@@ -142,6 +146,7 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner, int blo
 	}
 
 	r.currentT = t;
+	r.currentBlockIndex = blockIndex;
 	r.currentColor = texture2D(u_textureSheet, tempUV).rgb;
 }
 
@@ -164,8 +169,8 @@ void raySphereIntersection(inout Ray r, vec3 spherePos, float sphereRadius)
 		if(t < 0.0)
 			t = projectedPointT + x;
 
-		// The sphere is completely behind the ray
-		if(t < 0.0)
+		// The sphere is completely behind the ray or there is something closer to the ray
+		if(t < 0.0 || r.currentT < t)
 			return;
 
 		vec3 intersectionPoint = r.rayPosition + r.rayDirection * t;
@@ -215,7 +220,7 @@ void main()
 	vec3 rayDirection = normalize(rayLookAtPosition - u_cameraPosition);
 
 	// Let the ray position be fairly close to the camera position
-	vec3 rayPosition = u_cameraPosition + rayDirection*0.1f; 
+	vec3 rayPosition = u_cameraPosition + rayDirection*0.01f; 
 
 
 	Ray r = createRay(rayPosition, rayDirection);
@@ -225,7 +230,7 @@ void main()
 	for(int currentRay = 0; currentRay < NUM_MAX_RAY_BOUNCES; currentRay++)
 	{
 		if(currentRay > 0)
-			r = createRay(r.rayPosition + r.rayDirection * r.currentT + r.currentNormal * 0.01f, reflect(rayDirection, r.currentNormal));
+			r = createRay(r.rayPosition + r.rayDirection * r.currentT + r.currentNormal * 0.001f, normalize(reflect(r.rayDirection, r.currentNormal)));
 
 		for(int i = 0; i < u_numValidBlocks; i++)
 		{
@@ -237,17 +242,20 @@ void main()
 			);
 		}
 		
-		// Ray hit nothing
+		// Ray didn't hit anything
 		if(r.currentT >= MAX_RAY_DISTANCE)
+		{
+			currentCol = GetSkyboxColor(r.rayDirection);
+
+			break;
+		}
+		
+		currentCol = r.currentColor;
+
+		if(r.currentBlockIndex != 3)
 			break;
 
-		currentCol += r.currentColor * (currentRay + 1.0) / float(NUM_MAX_RAY_BOUNCES);
-	}
-
-	// Ray didn't hit anything
-	if(r.currentT >= MAX_RAY_DISTANCE)
-	{
-		currentCol = GetSkyboxColor(r.rayDirection);
+		//currentCol += r.currentColor * (currentRay + 1.0) / float(NUM_MAX_RAY_BOUNCES);
 	}
 
 	gl_FragColor = vec4(currentCol, 1.0);

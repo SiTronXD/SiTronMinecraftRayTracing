@@ -10,18 +10,15 @@ Player::Player(WorldHandler& _worldHandler)
 	cameraForwardVector = sf::Vector3f(0.0f, 0.0f, 1.0f);
 	worldUpVector = sf::Vector3f(0.0f, 1.0f, 0.0f);
 	cameraRightVector = sf::Vector3f(-1.0f, 0.0f, 0.0f);
+
+	currentPlaceBlockType = BlockType::Grass;
 }
 
 Player::~Player()
 {
 }
 
-void Player::Update(const float _dt)
-{
-	
-}
-
-void Player::MovePosition(const float _forwardDir, const float _upDir, const float _rightDir, const float _dt)
+void Player::movePosition(const float _forwardDir, const float _upDir, const float _rightDir, const float _dt)
 {
 	// Ignore the y-component and normalize the flat vector
 	//sf::Vector3f tempForwardVector = cameraForwardVector;
@@ -33,7 +30,7 @@ void Player::MovePosition(const float _forwardDir, const float _upDir, const flo
 	position += cameraForwardVector * _forwardDir * movementSpeed * _dt;
 }
 
-void Player::RotateDirection(const float _horizontalAngleDir, const float _verticalAngleDir)
+void Player::rotateDirection(const float _horizontalAngleDir, const float _verticalAngleDir)
 {
 	direction.x += _horizontalAngleDir;
 	direction.y += _verticalAngleDir;
@@ -54,7 +51,12 @@ void Player::RotateDirection(const float _horizontalAngleDir, const float _verti
 	SMath::vectorCross(cameraRightVector, cameraForwardVector, cameraUpVector);
 }
 
-void Player::PlaceBlock()
+void Player::setCurrentPlaceBlockType(const BlockType _newBlockType)
+{
+	currentPlaceBlockType = _newBlockType;
+}
+
+void Player::placeBlock()
 {
 	// Create ray
 	Ray ray(position, cameraForwardVector);
@@ -64,7 +66,7 @@ void Player::PlaceBlock()
 	std::vector<Block*> blocksToCheck = worldHandler.GetBlocksToRender();
 	for (int i = 0; i < blocksToCheck.size(); i++)
 	{
-		Hit tempHit = ray.GetClosestBoxHit(blocksToCheck[i]->GetPosition());
+		Hit tempHit = ray.GetClosestBoxHit(blocksToCheck[i]->getPosition());
 
 		// Find the closest hit
 		bestHit = Hit::getClosestHit(bestHit, tempHit);
@@ -78,11 +80,11 @@ void Player::PlaceBlock()
 		newBlockPos.y = round(newBlockPos.y);
 		newBlockPos.z = round(newBlockPos.z);
 
-		worldHandler.AddBlock((sf::Vector3i) newBlockPos, BlockType::Grass);
+		worldHandler.AddBlock((sf::Vector3i) newBlockPos, currentPlaceBlockType);
 	}
 }
 
-void Player::RemoveBlock()
+void Player::removeBlock()
 {
 	// Create ray
 	Ray ray(position, cameraForwardVector);
@@ -92,7 +94,7 @@ void Player::RemoveBlock()
 	std::vector<Block*> blocksToCheck = worldHandler.GetBlocksToRender();
 	for (int i = 0; i < blocksToCheck.size(); i++)
 	{
-		Hit tempHit = ray.GetClosestBoxHit(blocksToCheck[i]->GetPosition());
+		Hit tempHit = ray.GetClosestBoxHit(blocksToCheck[i]->getPosition());
 
 		// Find the closest hit
 		bestHit = Hit::getClosestHit(bestHit, tempHit);
@@ -111,27 +113,27 @@ void Player::RemoveBlock()
 }
 
 
-const sf::Vector3f& Player::GetPosition() const
+const sf::Vector3f& Player::getPosition() const
 {
 	return position;
 }
 
-const sf::Vector2f& Player::GetDirection() const
+const sf::Vector2f& Player::getDirection() const
 {
 	return direction;
 }
 
-const sf::Vector3f& Player::GetForwardVector() const
+const sf::Vector3f& Player::getForwardVector() const
 {
 	return cameraForwardVector;
 }
 
-const sf::Vector3f& Player::GetUpVector() const
+const sf::Vector3f& Player::getUpVector() const
 {
 	return cameraUpVector;
 }
 
-const sf::Vector3f& Player::GetRightVector() const
+const sf::Vector3f& Player::getRightVector() const
 {
 	return cameraRightVector;
 }

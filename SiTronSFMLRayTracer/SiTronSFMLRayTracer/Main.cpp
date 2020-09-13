@@ -82,26 +82,28 @@ int main()
     sf::Clock deltaClock;
 
     // Textures
-    const int MAX_NUM_TEXTURE_RECTS = 6;
+    /*const int MAX_NUM_TEXTURE_RECTS = 9;
     sf::Glsl::Vec4 rects[MAX_NUM_TEXTURE_RECTS];
-    rects[0 + 0] = sf::Glsl::Vec4(0, 0, 16, 16);    // Dirt block - up
-    rects[0 + 1] = sf::Glsl::Vec4(48, 0, 16, 16);   // Dirt block - side
-    rects[0 + 2] = sf::Glsl::Vec4(32, 0, 16, 16);   // Dirt block - down
+    rects[3*0 + 0] = sf::Glsl::Vec4(0, 0, 16, 16);    // Dirt block - up
+    rects[3*0 + 1] = sf::Glsl::Vec4(48, 0, 16, 16);   // Dirt block - side
+    rects[3*0 + 2] = sf::Glsl::Vec4(32, 0, 16, 16);   // Dirt block - down
 
-    rects[3 + 0] = sf::Glsl::Vec4(16, 0, 16, 16);   // Stone block - up
-    rects[3 + 1] = sf::Glsl::Vec4(16, 0, 16, 16);   // Stone block - side
-    rects[3 + 2] = sf::Glsl::Vec4(16, 0, 16, 16);   // Stone block - down
+    rects[3*1 + 0] = sf::Glsl::Vec4(16, 0, 16, 16);   // Stone block - up
+    rects[3*1 + 1] = sf::Glsl::Vec4(16, 0, 16, 16);   // Stone block - side
+    rects[3*1 + 2] = sf::Glsl::Vec4(16, 0, 16, 16);   // Stone block - down
+
+    rects[3*2 + 0] = sf::Glsl::Vec4(16 * 10, 16, 16, 16);   // Mirror block - up
+    rects[3*2 + 1] = sf::Glsl::Vec4(16 * 10, 16, 16, 16);   // Mirror block - side
+    rects[3*2 + 2] = sf::Glsl::Vec4(16 * 10, 16, 16, 16);   // Mirror block - down*/
 
     // Blocks
-    //worldHandler.AddBlock(sf::Vector3i(2, 0, 0), BlockType::Grass);
-
-    for (int x = 0; x < 16; x++)
+    for (int x = 0; x < 8; x++)
     {
-        for (int z = 0; z < 16; z++)
+        for (int z = 0; z < 8; z++)
         {
-            float noiseX = x / 1000.0;
-            float noiseZ = z / 1000.0;
-            float y = floor(SMath::perlinNoise(noiseX, noiseZ) * 5.0) - 2;
+            float noiseX = x / 1000.0f;
+            float noiseZ = z / 1000.0f;
+            float y = (float) floor(SMath::perlinNoise(noiseX, noiseZ) * 5.0f) - 2;
 
             worldHandler.AddBlock(sf::Vector3i(x - 8, y, z - 8), BlockType::Stone);
         }
@@ -135,7 +137,6 @@ int main()
 
 
         inputHandler.Update(dt);
-        player.Update(dt);
 
         // Find all blocks to render
         std::vector<Block*> blocksToRender = worldHandler.GetBlocksToRender();
@@ -146,14 +147,14 @@ int main()
         int numValidBlocks = SMath::min(256, blocksToRender.size());
         for (int i = 0; i < numValidBlocks; i++)
         {
-            blockPositions[i] = (sf::Glsl::Vec3) blocksToRender[i]->GetPosition();
-            blockIndices[i] = blocksToRender[i]->GetBlockTypeIndex();
+            blockPositions[i] = (sf::Glsl::Vec3) blocksToRender[i]->getPosition();
+            blockIndices[i] = blocksToRender[i]->getBlockTypeIndex();
         }
 
         // Package camera vectors into camera matrix
-        sf::Glsl::Vec3 camRight = player.GetRightVector();
-        sf::Glsl::Vec3 camUp = player.GetUpVector();
-        sf::Glsl::Vec3 camForward = player.GetForwardVector();
+        sf::Glsl::Vec3 camRight = player.getRightVector();
+        sf::Glsl::Vec3 camUp = player.getUpVector();
+        sf::Glsl::Vec3 camForward = player.getForwardVector();
 
         float cameraRotMatFloatArray[3 * 3] =
         {
@@ -167,11 +168,11 @@ int main()
         // Update shader
 
         // Camera
-        rayTracingShader.setUniform("u_cameraPosition", player.GetPosition());
+        rayTracingShader.setUniform("u_cameraPosition", player.getPosition());
         rayTracingShader.setUniform("u_cameraRot", cameraRot);
 
         // Blocks
-        rayTracingShader.setUniformArray("u_blockTextureRect", rects, MAX_NUM_TEXTURE_RECTS);
+        rayTracingShader.setUniformArray("u_blockTextureRect", Block::textureRects, Block::MAX_NUM_TEXTURE_RECTS);
         rayTracingShader.setUniformArray("u_blocks", blockPositions, maxBlocks);
         rayTracingShader.setUniformArray("u_blockIndex", blockIndices, maxBlocks);
         rayTracingShader.setUniform("u_numValidBlocks", numValidBlocks);
