@@ -1,7 +1,6 @@
 #include "Player.h"
 
-Player::Player(WorldHandler& _worldHandler)
-	: worldHandler(_worldHandler)
+Player::Player()
 {
 	position = sf::Vector3f(0.0f, 0.0f, -3.0f);
 
@@ -16,6 +15,11 @@ Player::Player(WorldHandler& _worldHandler)
 
 Player::~Player()
 {
+}
+
+void Player::init(WorldHandler* _worldHandler)
+{
+	worldHandler = _worldHandler;
 }
 
 void Player::movePosition(const float _forwardDir, const float _upDir, const float _rightDir, const float _dt)
@@ -63,7 +67,7 @@ void Player::placeBlock()
 	Hit bestHit;
 
 	// Let ray intersect with the blocks
-	std::vector<Block*> blocksToCheck = worldHandler.GetBlocksToRender();
+	std::vector<Block*> blocksToCheck = worldHandler->GetBlocksToRender();
 	for (int i = 0; i < blocksToCheck.size(); i++)
 	{
 		Hit tempHit = ray.GetClosestBoxHit(blocksToCheck[i]->getPosition());
@@ -80,7 +84,7 @@ void Player::placeBlock()
 		newBlockPos.y = round(newBlockPos.y);
 		newBlockPos.z = round(newBlockPos.z);
 
-		worldHandler.AddBlock((sf::Vector3i) newBlockPos, currentPlaceBlockType);
+		worldHandler->AddBlock((sf::Vector3i) newBlockPos, currentPlaceBlockType);
 	}
 }
 
@@ -91,7 +95,7 @@ void Player::removeBlock()
 	Hit bestHit;
 
 	// Let ray intersect with the blocks
-	std::vector<Block*> blocksToCheck = worldHandler.GetBlocksToRender();
+	std::vector<Block*> blocksToCheck = worldHandler->GetBlocksToRender();
 	for (int i = 0; i < blocksToCheck.size(); i++)
 	{
 		Hit tempHit = ray.GetClosestBoxHit(blocksToCheck[i]->getPosition());
@@ -108,7 +112,7 @@ void Player::removeBlock()
 		newBlockPos.y = round(newBlockPos.y);
 		newBlockPos.z = round(newBlockPos.z);
 
-		worldHandler.RemoveBlock((sf::Vector3i) newBlockPos);
+		worldHandler->RemoveBlock((sf::Vector3i) newBlockPos);
 	}
 }
 

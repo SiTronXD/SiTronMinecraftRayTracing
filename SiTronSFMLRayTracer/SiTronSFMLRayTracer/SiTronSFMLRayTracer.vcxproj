@@ -152,9 +152,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Block.cpp" />
+    <ClCompile Include="Gamestate.cpp" />
+    <ClCompile Include="GamestateManager.cpp" />
     <ClCompile Include="Hit.cpp" />
     <ClCompile Include="InputHandler.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MinecraftPlayState.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Ray.cpp" />
     <ClCompile Include="SettingsHandler.cpp" />
@@ -169,8 +172,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Block.h" />
+    <ClInclude Include="Gamestate.h" />
+    <ClInclude Include="GamestateManager.h" />
     <ClInclude Include="Hit.h" />
     <ClInclude Include="InputHandler.h" />
+    <ClInclude Include="MinecraftPlayState.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Ray.h" />
     <ClInclude Include="SettingsHandler.h" />

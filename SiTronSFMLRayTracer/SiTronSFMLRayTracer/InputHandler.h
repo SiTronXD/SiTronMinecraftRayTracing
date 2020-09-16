@@ -9,8 +9,8 @@
 class InputHandler
 {
 private:
-	Player& player;
-	sf::Window& window;
+	Player* player;
+	sf::Window* window;
 
 	sf::Vector2i screenMiddlePos;
 	sf::Vector2i lastMousePosition;
@@ -21,8 +21,10 @@ private:
 	bool lastPressedMouse2;
 
 public:
-	InputHandler(Player& _player, sf::Window& _window);
+	InputHandler();
 	~InputHandler();
+
+	void init(Player* _player, sf::Window* _window);
 
 	void Update(const float _dt);
 };

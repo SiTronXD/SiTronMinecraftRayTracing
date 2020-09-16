@@ -48,6 +48,15 @@
     <ClCompile Include="SMath.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="GamestateManager.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Gamestate.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="MinecraftPlayState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shaders\RayTracing_Frag.glsl">
@@ -87,6 +96,15 @@
     </ClInclude>
     <ClInclude Include="SMath.h">
       <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="GamestateManager.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Gamestate.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="MinecraftPlayState.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

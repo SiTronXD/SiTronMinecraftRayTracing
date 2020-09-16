@@ -10,7 +10,7 @@
 class Player
 {
 private:
-	WorldHandler& worldHandler;
+	WorldHandler* worldHandler;
 
 	sf::Vector3f position;
 	sf::Vector2f direction; // (horizontal angle in radians, vertical angle in radians)
@@ -25,8 +25,10 @@ private:
 	BlockType currentPlaceBlockType;
 
 public:
-	Player(WorldHandler& _worldHandler);
+	Player();
 	~Player();
+
+	void init(WorldHandler* _worldHandler);
 
 	void movePosition(const float _forwardDir, const float _upDir, const float _rightDir, const float _dt);
 	void rotateDirection(const float _horizontalAngleDir, const float _verticalAngleDir);
