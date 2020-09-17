@@ -13,49 +13,42 @@ MinecraftPlayState::~MinecraftPlayState()
 
 void MinecraftPlayState::init()
 {
+    // Check for shader availability
+    if (!sf::Shader::isAvailable())
+    {
+        Log::print("Shaders are not available for this gpu...");
+        Log::pauseConsole();
+    }
+
+    // Load shaders
+    Loader::loadShader(
+        "Resources/Shaders/RayTracing_Vert.glsl", 
+        "Resources/Shaders/Raytracing_Frag.glsl",
+        rayTracingShader
+    );
+    Loader::loadShader(
+        "Resources/Shaders/PostProcessingEffect_Vert.glsl",
+        "Resources/Shaders/PostProcessingEffect_Frag.glsl",
+        postProcessingShader
+    );
+
+    // Load textures
+    Loader::loadTexture("Resources/Graphics/minecraftTextureSheet.png", textureSheet);
+    Loader::loadTexture("Resources/Graphics/Crosshair.png", crosshairTexture);
+
+    // Create render texture
+    if (!renderTexture.create(settingsHandler.GetWindowWidth(), settingsHandler.GetWindowHeight()))
+        Log::print("Couldn't create render texture");
+
+
+    // Initialize window shader rect
     windowShaderRect.setSize(sf::Vector2f((float)settingsHandler.GetWindowWidth(), (float)settingsHandler.GetWindowHeight()));
     windowShaderRect.setFillColor(sf::Color::Green);
 
     player.init(&worldHandler);
     inputHandler.init(&player, &window);
 
-    // Check for shader availability
-    if (!sf::Shader::isAvailable())
-    {
-        std::cout << "Shaders are not available for this gpu..." << std::endl;
-    }
-
-    // Load shaders
-    if (!rayTracingShader.loadFromFile(
-        "Resources/Shaders/RayTracing_Vert.glsl",
-        "Resources/Shaders/Raytracing_Frag.glsl"
-    ))
-    {
-        std::cout << "Could not load ray tracing shaders..." << std::endl;
-
-        (void)getchar();
-    }
-
-    if (!postProcessingShader.loadFromFile(
-        "Resources/Shaders/PostProcessingEffect_Vert.glsl",
-        "Resources/Shaders/PostProcessingEffect_Frag.glsl"
-    ))
-    {
-        std::cout << "Could not load post-processing shaders..." << std::endl;
-
-        (void)getchar();
-    }
-
-    if (!textureSheet.loadFromFile("Resources/Graphics/minecraftTextureSheet.png"))
-    {
-        std::cout << "Could not load texture..." << std::endl;
-    }
-
-    if (!crosshairTexture.loadFromFile("Resources/Graphics/Crosshair.png"))
-    {
-        std::cout << "Could not load texture..." << std::endl;
-    }
-
+    // Crosshair
     crosshairRect.setSize(sf::Vector2f(25, 25));
     crosshairRect.setPosition(
         settingsHandler.GetWindowWidth() / 2.0f - crosshairRect.getSize().x / 2.0f,
@@ -63,10 +56,8 @@ void MinecraftPlayState::init()
     );
     crosshairRect.setTexture(&crosshairTexture);
 
-    bool reloadedShader = false;
-    
 
-    // Blocks
+    // Spawn blocks
     for (int x = 0; x < 8; x++)
     {
         for (int z = 0; z < 8; z++)
@@ -77,12 +68,6 @@ void MinecraftPlayState::init()
 
             worldHandler.AddBlock(sf::Vector3i(x - 8, y, z - 8), BlockType::Stone);
         }
-    }
-
-
-    if (!renderTexture.create(settingsHandler.GetWindowWidth(), settingsHandler.GetWindowHeight()))
-    {
-        std::cout << "Couldn't create render texture" << std::endl;
     }
 }
 
@@ -96,9 +81,7 @@ void MinecraftPlayState::update(float dt)
     // Find all blocks to render
     std::vector<Block*> blocksToRender = worldHandler.GetBlocksToRender();
 
-    const int maxBlocks = 256;
-    sf::Glsl::Vec3 blockPositions[maxBlocks];
-    float blockIndices[maxBlocks];
+    // Fill arrays with positions and indices
     int numValidBlocks = SMath::min(256, blocksToRender.size());
     for (int i = 0; i < numValidBlocks; i++)
     {
@@ -128,8 +111,8 @@ void MinecraftPlayState::update(float dt)
 
     // Blocks
     rayTracingShader.setUniformArray("u_blockTextureRect", Block::textureRects, Block::MAX_NUM_TEXTURE_RECTS);
-    rayTracingShader.setUniformArray("u_blocks", blockPositions, maxBlocks);
-    rayTracingShader.setUniformArray("u_blockIndex", blockIndices, maxBlocks);
+    rayTracingShader.setUniformArray("u_blocks", blockPositions, NUM_MAX_BLOCKS);
+    rayTracingShader.setUniformArray("u_blockIndex", blockIndices, NUM_MAX_BLOCKS);
     rayTracingShader.setUniform("u_numValidBlocks", numValidBlocks);
     rayTracingShader.setUniform("u_textureSheet", textureSheet);
 
@@ -141,11 +124,9 @@ void MinecraftPlayState::update(float dt)
 void MinecraftPlayState::draw()
 {
     // Render world to texture
-    //renderTexture.clear(sf::Color::Red);
     renderTexture.draw(windowShaderRect, &rayTracingShader);
     renderTexture.draw(crosshairRect);
     renderTexture.display();
-
 
     // Render texture to screen with post-processing effect
     postProcessingShader.setUniform("u_mainTexture", renderTexture.getTexture());

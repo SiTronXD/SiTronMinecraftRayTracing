@@ -57,6 +57,12 @@
     <ClCompile Include="MinecraftPlayState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Loader.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Log.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shaders\RayTracing_Frag.glsl">
@@ -104,6 +110,12 @@
       <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="MinecraftPlayState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Loader.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

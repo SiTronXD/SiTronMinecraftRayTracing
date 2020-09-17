@@ -56,18 +56,18 @@ void InputHandler::Update(const float _dt)
     lastPressedTab = sf::Keyboard::isKeyPressed(sf::Keyboard::Tab);
 
     // Player placed block
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && !lastPressedMouse1)
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right) && !lastPressedMouse2)
     {
         player->placeBlock();
     }
-    lastPressedMouse1 = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
+    lastPressedMouse2 = sf::Mouse::isButtonPressed(sf::Mouse::Button::Right);
 
     // Player removed block
-    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right) && !lastPressedMouse2)
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && !lastPressedMouse1)
     {
         player->removeBlock();
     }
-    lastPressedMouse2 = sf::Mouse::isButtonPressed(sf::Mouse::Button::Right);
+    lastPressedMouse1 = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
 
     // Player current place block
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1))

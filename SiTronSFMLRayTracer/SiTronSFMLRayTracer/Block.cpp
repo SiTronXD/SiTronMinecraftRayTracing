@@ -14,9 +14,9 @@ const sf::Glsl::Vec4 Block::textureRects[] =
     sf::Glsl::Vec4(16 * 10, 16, 16, 16),   // Redstone block - side
     sf::Glsl::Vec4(16 * 10, 16, 16, 16),   // Redstone block - down
 
-    sf::Glsl::Vec4(16 * 8, 16 * 7, 16, 16),  // Mirror block - up
-    sf::Glsl::Vec4(16 * 8, 16 * 7, 16, 16),  // Mirror block - side
-    sf::Glsl::Vec4(16 * 8, 16 * 7, 16, 16)   // Mirror block - down
+    sf::Glsl::Vec4(16 * 1, 16 * 3, 16, 16),  // Mirror block - up
+    sf::Glsl::Vec4(16 * 1, 16 * 3, 16, 16),  // Mirror block - side
+    sf::Glsl::Vec4(16 * 1, 16 * 3, 16, 16)   // Mirror block - down
 };
 
 Block::Block(sf::Vector3i _position, BlockType _blockType)
