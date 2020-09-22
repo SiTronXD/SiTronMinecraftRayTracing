@@ -9,6 +9,7 @@ uniform int u_numValidBlocks;
 const float MAX_RAY_DISTANCE = 64.0;
 
 uniform float u_blockIndex[NUM_MAX_BLOCKS];
+uniform float u_time;
 
 uniform vec2 u_resolution;
 
@@ -20,6 +21,7 @@ uniform mat3x3 u_cameraRot;
 uniform vec4 u_blockTextureRect[NUM_MAX_TEXTURERECTS];
 
 uniform sampler2D u_textureSheet;
+uniform sampler2D u_blueNoiseTexture;
 
 // Non-uniforms
 vec2 oneOverTextureSize = vec2(1.0) / textureSize(u_textureSheet, 0).xy;
@@ -185,6 +187,19 @@ void raySphereIntersection(inout Ray r, vec3 spherePos, float sphereRadius)
 	}
 }
 
+void raySceneIntersection(inout Ray r)
+{
+	for(int i = 0; i < u_numValidBlocks; i++)
+	{
+		rayBoxAABBIntersection(
+			r, 
+			u_blocks[i] + vec3(-0.5), 
+			u_blocks[i] + vec3(0.5),
+			int(u_blockIndex[i])
+		);
+	}
+}
+
 vec3 getSkyboxColor(vec3 rayDirection)
 {
 	float t = (rayDirection.y*1.2 + 1.0f) * 0.5f;
@@ -240,6 +255,41 @@ vec3 godRaysAttempt1(Ray r)
 	return mix(shadowCol, vec3(1.0), godRay);
 }
 
+vec3 godRaysAttempt2(Ray r, vec2 uv, vec3 pixelColor)
+{
+	const int NUM_FOG_SAMPLES = 8;
+	const float fogDensity = 0.5;
+	const float c_goldenRatioConjugate = 0.618033f; // also just fract(goldenRatio)
+
+	float startT = texture(u_blueNoiseTexture, fract(abs(uv))).r;
+	startT = fract(startT + (u_time * 500.0) * c_goldenRatioConjugate);
+
+	float fogLitPercentage = 0.0f;
+	for(int i = 0; i < NUM_FOG_SAMPLES; i++)
+	{
+		vec3 tempPos = r.rayPosition + r.rayDirection * r.currentT * 
+			((startT+float(i)) / float(NUM_FOG_SAMPLES));
+		Ray tempFogRay = createRay(tempPos, -lightDir);
+
+		// Send ray into scene
+		raySceneIntersection(tempFogRay);
+
+		fogLitPercentage = mix(
+			fogLitPercentage, 
+			tempFogRay.currentT >= MAX_RAY_DISTANCE ? 1.0f : 0.0f,
+			1.0f / (float(i + 1))
+		);
+	}
+
+	vec3 unlitColor = vec3(0.0);
+	vec3 litColor = pixelColor;
+
+	vec3 fogColor = mix(unlitColor, litColor, fogLitPercentage);
+	float absorb = exp(-r.currentT * fogDensity);
+
+	return mix(fogColor, pixelColor, absorb);
+}
+
 void main()
 {
 	// UV coordinates
@@ -271,15 +321,9 @@ void main()
 		if(currentRay > 0)
 			r = createRay(r.rayPosition + r.rayDirection * r.currentT + r.currentNormal * 0.001f, normalize(reflect(r.rayDirection, r.currentNormal)));
 
-		for(int i = 0; i < u_numValidBlocks; i++)
-		{
-			rayBoxAABBIntersection(
-				r, 
-				u_blocks[i] + vec3(-0.5), 
-				u_blocks[i] + vec3(0.5),
-				int(u_blockIndex[i])
-			);
-		}
+		// Ray interacts with scene
+		raySceneIntersection(r);
+
 		
 		// Ray didn't hit anything
 		if(r.currentT >= MAX_RAY_DISTANCE)
@@ -293,8 +337,12 @@ void main()
 		if(r.currentColor.a == 0.0)
 			r.currentColor = vec4(1.0) - r.currentColor;
 
+		// God rays attempt 1
+		//currentCol *= r.currentColor * vec4(godRaysAttempt1(r), 1.0);
 
-		currentCol *= r.currentColor;// * godRaysAttempt1(r);
+		// God rays attempt 2
+		r.currentColor.rgb = godRaysAttempt2(r, (uv + vec2(3.0, 3.0)) * 3.12f, r.currentColor.rgb);
+		currentCol *= r.currentColor;
 
 		// Recursion only if the block is a mirror
 		if(r.currentBlockIndex != 3)

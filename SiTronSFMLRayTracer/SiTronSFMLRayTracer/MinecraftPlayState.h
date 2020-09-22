@@ -14,6 +14,7 @@ private:
 	sf::Shader postProcessingShader;
 
 	sf::Texture textureSheet;
+	sf::Texture blueNoiseTexture;
 	sf::Texture crosshairTexture;
 
 	sf::RenderTexture renderTexture;
@@ -27,8 +28,10 @@ private:
 	Player player;
 
 	static const int NUM_MAX_BLOCKS = 256;
-	sf::Glsl::Vec3 blockPositions[NUM_MAX_BLOCKS];   // Positions for each block
-	float blockIndices[NUM_MAX_BLOCKS];              // Index for each block
+	sf::Glsl::Vec3 blockPositions[NUM_MAX_BLOCKS] {};   // Positions for each block
+	float blockIndices[NUM_MAX_BLOCKS] {};              // Index for each block
+
+	float timer;
 
 public:
 	MinecraftPlayState(sf::RenderWindow& _window);

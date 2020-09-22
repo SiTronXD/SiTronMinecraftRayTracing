@@ -34,6 +34,7 @@ void MinecraftPlayState::init()
 
     // Load textures
     Loader::loadTexture("Resources/Graphics/minecraftTextureSheet.png", textureSheet);
+    Loader::loadTexture("Resources/Graphics/blueNoiseTexture.png", blueNoiseTexture);
     Loader::loadTexture("Resources/Graphics/Crosshair.png", crosshairTexture);
 
     // Create render texture
@@ -82,6 +83,8 @@ void MinecraftPlayState::init()
 
     worldHandler.AddBlock(sf::Vector3i(-2, 2, -2), BlockType::RedstoneBlock);
     worldHandler.AddBlock(sf::Vector3i(-3, 2, -2), BlockType::RedstoneBlock);
+
+    timer = 0.0f;
 }
 
 void MinecraftPlayState::handleInput(float dt)
@@ -91,6 +94,8 @@ void MinecraftPlayState::handleInput(float dt)
 
 void MinecraftPlayState::update(float dt)
 {
+    timer += dt;
+
     // Find all blocks to render
     std::vector<Block*> blocksToRender = worldHandler.GetBlocksToRender();
 
@@ -128,10 +133,11 @@ void MinecraftPlayState::update(float dt)
     rayTracingShader.setUniformArray("u_blockIndex", blockIndices, NUM_MAX_BLOCKS);
     rayTracingShader.setUniform("u_numValidBlocks", numValidBlocks);
     rayTracingShader.setUniform("u_textureSheet", textureSheet);
+    rayTracingShader.setUniform("u_blueNoiseTexture", blueNoiseTexture);
 
     // Other shader uniforms
     rayTracingShader.setUniform("u_resolution", sf::Glsl::Vec2((float)settingsHandler.GetWindowWidth(), (float)settingsHandler.GetWindowHeight()));
-    //rayTracingShader.setUniform("u_time", time);
+    rayTracingShader.setUniform("u_time", timer);
 }
 
 void MinecraftPlayState::draw()
