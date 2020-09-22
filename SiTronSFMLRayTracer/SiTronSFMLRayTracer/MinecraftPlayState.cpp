@@ -69,6 +69,19 @@ void MinecraftPlayState::init()
             worldHandler.AddBlock(sf::Vector3i(x - 8, y, z - 8), BlockType::Stone);
         }
     }
+
+    worldHandler.AddBlock(sf::Vector3i(-2, 0, -1), BlockType::RedstoneBlock);
+    worldHandler.AddBlock(sf::Vector3i(-3, 0, -1), BlockType::RedstoneBlock);
+    worldHandler.AddBlock(sf::Vector3i(-2, 1, -1), BlockType::RedstoneBlock);
+    worldHandler.AddBlock(sf::Vector3i(-3, 1, -1), BlockType::RedstoneBlock);
+
+    worldHandler.AddBlock(sf::Vector3i(-1, 0, -2), BlockType::RedstoneBlock);
+    worldHandler.AddBlock(sf::Vector3i(-1, 0, -3), BlockType::RedstoneBlock);
+    worldHandler.AddBlock(sf::Vector3i(-1, 1, -3), BlockType::RedstoneBlock);
+
+
+    worldHandler.AddBlock(sf::Vector3i(-2, 2, -2), BlockType::RedstoneBlock);
+    worldHandler.AddBlock(sf::Vector3i(-3, 2, -2), BlockType::RedstoneBlock);
 }
 
 void MinecraftPlayState::handleInput(float dt)
