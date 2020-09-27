@@ -27,9 +27,10 @@ private:
 	InputHandler inputHandler;
 	Player player;
 
-	static const int NUM_MAX_BLOCKS = 256;
-	sf::Glsl::Vec3 blockPositions[NUM_MAX_BLOCKS] {};   // Positions for each block
-	float blockIndices[NUM_MAX_BLOCKS] {};              // Index for each block
+	static const int NUM_MAX_RENDER_BLOCKS = 256;
+	sf::Glsl::Vec3 blockPositions[NUM_MAX_RENDER_BLOCKS] {};	// Positions for each block
+	float blockIndices[NUM_MAX_RENDER_BLOCKS] {};				// Index for each block
+	float blockSpecular[NUM_MAX_RENDER_BLOCKS] {};				// Specular for each block
 
 	float timer;
 

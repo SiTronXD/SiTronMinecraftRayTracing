@@ -1,15 +1,25 @@
 #version 130
 
-const int NUM_MAX_RAY_BOUNCES = 3;
+#define GOD_RAYS_ENABLED 0
+
+// Constants
+const int NUM_MAX_RAY_BOUNCES = 8;
 const int NUM_MAX_BLOCKS = 256;
 const int NUM_MAX_TEXTURERECTS = 12;
 
+const vec3 LIGHT_DIR = normalize(vec3(-1.0));
+const int NUM_FOG_SAMPLES = 8;
+const float FOG_DENSITY = 0.5;
+const float GOLDEN_RATIO_CONJUGATE = 0.618033f; // also just fract(goldenRatio)
+
+// Uniforms
 uniform int u_numValidBlocks;
 
 const float MAX_RAY_DISTANCE = 64.0;
 
-uniform float u_blockIndex[NUM_MAX_BLOCKS];
 uniform float u_time;
+uniform float u_blockIndex[NUM_MAX_BLOCKS];
+uniform float u_blockSpecular[NUM_MAX_BLOCKS];
 
 uniform vec2 u_resolution;
 
@@ -26,8 +36,16 @@ uniform sampler2D u_blueNoiseTexture;
 // Non-uniforms
 vec2 oneOverTextureSize = vec2(1.0) / textureSize(u_textureSheet, 0).xy;
 
-const vec3 lightDir = normalize(vec3(-1.0));
+// Hit structure
+struct Hit
+{
+	float specular;
 
+	int currentBlockIndex;
+
+	vec3 currentNormal;
+	vec4 currentColor;
+};
 
 // Ray structure
 struct Ray
@@ -37,12 +55,24 @@ struct Ray
 	vec3 oneOverRayDirection;
 
 	float currentT;
-
-	int currentBlockIndex;
-
-	vec3 currentNormal;
-	vec4 currentColor;
+	float currentEnergy;
+	
+	Hit hit;
 };
+
+Hit createEmptyHit()
+{
+	Hit h;
+
+	h.specular = 0.0;
+
+	h.currentBlockIndex = -1;
+
+	h.currentNormal = vec3(0.0, 1.0, 0.0);
+	h.currentColor = vec4(vec3(0.1), 1.0);
+
+	return h;
+}
 
 // Create a new ray
 Ray createRay(vec3 _rayPosition, vec3 _rayDirection)
@@ -53,13 +83,23 @@ Ray createRay(vec3 _rayPosition, vec3 _rayDirection)
 	r.oneOverRayDirection = 1.0 / _rayDirection;
 
 	r.currentT = MAX_RAY_DISTANCE;
+	r.currentEnergy = 1.0;
 
-	r.currentBlockIndex = -1;
-
-	r.currentNormal = vec3(0.0, 1.0, 0.0);
-	r.currentColor = vec4(vec3(0.1), 1.0);
+	r.hit = createEmptyHit();
 
 	return r;
+}
+
+// Bounce existing ray
+void bounceRay(inout Ray r)
+{
+	r.rayPosition = r.rayPosition + r.rayDirection * r.currentT + r.hit.currentNormal * 0.001f;
+	r.rayDirection = normalize(reflect(r.rayDirection, r.hit.currentNormal));
+	r.oneOverRayDirection = 1.0 / r.rayDirection;
+	
+	r.currentT = MAX_RAY_DISTANCE;
+	
+	r.hit = createEmptyHit();
 }
 
 // Squared length of a vector. Used for fast distance comparison
@@ -68,7 +108,8 @@ float squaredLength(vec3 p)
 	return p.x*p.x + p.y*p.y + p.z*p.z;
 }
 
-void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner, int blockIndex)
+void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner, 
+	int loopIndex)
 {
 	float t1 = (minCorner.x - r.rayPosition.x) * r.oneOverRayDirection.x;
 	float t2 = (maxCorner.x - r.rayPosition.x) * r.oneOverRayDirection.x;
@@ -99,6 +140,7 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner, int blo
 
 	vec2 tempUV = vec2(0.0);
 
+	int blockIndex = int(u_blockIndex[loopIndex]);
 	int textureIndexOffset = 3 * blockIndex;
 
 	// Horizontal sides
@@ -111,7 +153,7 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner, int blo
 			(u_blockTextureRect[textureIndexOffset + 1].y + tempUV.y * u_blockTextureRect[textureIndexOffset + 1].w) * oneOverTextureSize.y
 		);
 
-		r.currentNormal = vec3(t == t1 ? -1.0 : 1.0, 0.0, 0.0);
+		r.hit.currentNormal = vec3(t == t1 ? -1.0 : 1.0, 0.0, 0.0);
 	}
 	// Top or bottom
 	else if(t == t3 || t == t4)
@@ -125,7 +167,7 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner, int blo
 				(u_blockTextureRect[textureIndexOffset + 0].y + tempUV.y * u_blockTextureRect[textureIndexOffset + 0].w) * oneOverTextureSize.y
 			);
 			
-			r.currentNormal = vec3(0.0, 1.0, 0.0);
+			r.hit.currentNormal = vec3(0.0, 1.0, 0.0);
 		}
 		else
 		{
@@ -134,7 +176,7 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner, int blo
 				(u_blockTextureRect[textureIndexOffset + 2].y + tempUV.y * u_blockTextureRect[textureIndexOffset + 2].w) * oneOverTextureSize.y
 			);
 
-			r.currentNormal = vec3(0.0, -1.0, 0.0);
+			r.hit.currentNormal = vec3(0.0, -1.0, 0.0);
 		}
 	}
 	// Other sides
@@ -147,12 +189,13 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner, int blo
 			(u_blockTextureRect[textureIndexOffset + 1].y + tempUV.y * u_blockTextureRect[textureIndexOffset + 1].w) * oneOverTextureSize.y
 		);
 		
-		r.currentNormal = vec3(0.0, 0.0, t == t5 ? -1.0 : 1.0);
+		r.hit.currentNormal = vec3(0.0, 0.0, t == t5 ? -1.0 : 1.0);
 	}
 
 	r.currentT = t;
-	r.currentBlockIndex = blockIndex;
-	r.currentColor = texture2D(u_textureSheet, tempUV);
+	r.hit.currentBlockIndex = blockIndex;
+	r.hit.specular = u_blockSpecular[loopIndex];
+	r.hit.currentColor = texture2D(u_textureSheet, tempUV);
 }
 
 void raySphereIntersection(inout Ray r, vec3 spherePos, float sphereRadius)
@@ -182,8 +225,9 @@ void raySphereIntersection(inout Ray r, vec3 spherePos, float sphereRadius)
 		vec3 normal = normalize(intersectionPoint - spherePos);
 
 		r.currentT = t;
-		r.currentNormal = normal;
-		r.currentColor = vec4(0.9, 0.0, 0.0, 1.0) * dot(normalize(vec3(1.0, 1.0, -1.0)), normal);
+		r.hit.currentNormal = normal;
+		r.hit.specular = 0.0f;
+		r.hit.currentColor = vec4(0.9, 0.0, 0.0, 1.0) * dot(normalize(vec3(1.0, 1.0, -1.0)), normal);
 	}
 }
 
@@ -195,7 +239,7 @@ void raySceneIntersection(inout Ray r)
 			r, 
 			u_blocks[i] + vec3(-0.5), 
 			u_blocks[i] + vec3(0.5),
-			int(u_blockIndex[i])
+			i
 		);
 	}
 }
@@ -211,7 +255,7 @@ vec3 getSkyboxColor(vec3 rayDirection)
 	vec3 sunColor = vec3(0.98, 0.93, 0.6);
 
 	float isSun = 0.0;
-	isSun = smoothstep(0.97, 1.0, dot(rayDirection, -lightDir));
+	isSun = smoothstep(0.97, 1.0, dot(rayDirection, -LIGHT_DIR));
 	isSun = pow(isSun, 3.0);
 
 	vec3 col = mix(skyColor, sunColor, isSun);
@@ -231,7 +275,7 @@ vec3 godRaysAttempt1(Ray r)
 		float maxSampleDistance = clamp(r.currentT, 0.0, 8.0);
 		for(float i = 0.0; i < samples; i += 1.0)
 		{
-			godRaysRay = createRay(r.rayPosition + r.rayDirection * (i/samples) * maxSampleDistance, -lightDir);
+			godRaysRay = createRay(r.rayPosition + r.rayDirection * (i/samples) * maxSampleDistance, -LIGHT_DIR);
 
 			for(int i = 0; i < u_numValidBlocks; i++)
 			{
@@ -239,7 +283,7 @@ vec3 godRaysAttempt1(Ray r)
 					godRaysRay, 
 					u_blocks[i] + vec3(-0.5), 
 					u_blocks[i] + vec3(0.5),
-					int(u_blockIndex[i])
+					i
 				);
 			}
 
@@ -250,26 +294,22 @@ vec3 godRaysAttempt1(Ray r)
 	else
 		godRay = 1.0;
 
-	vec3 shadowCol = pow(godRaysRay.currentColor.rgb * vec3(0.99), vec3(8.0)) / pow(clamp(godRaysRay.currentT, 1.0, 5.0), 3.0);
+	vec3 shadowCol = pow(godRaysRay.hit.currentColor.rgb * vec3(0.99), vec3(8.0)) / pow(clamp(godRaysRay.currentT, 1.0, 5.0), 3.0);
 
 	return mix(shadowCol, vec3(1.0), godRay);
 }
 
 vec3 godRaysAttempt2(Ray r, vec2 uv, vec3 pixelColor)
 {
-	const int NUM_FOG_SAMPLES = 8;
-	const float fogDensity = 0.5;
-	const float c_goldenRatioConjugate = 0.618033f; // also just fract(goldenRatio)
-
 	float startT = texture(u_blueNoiseTexture, fract(abs(uv))).r;
-	startT = fract(startT + (u_time * 500.0) * c_goldenRatioConjugate);
+	startT = fract(startT + (u_time * 500.0) * GOLDEN_RATIO_CONJUGATE);
 
 	float fogLitPercentage = 0.0f;
 	for(int i = 0; i < NUM_FOG_SAMPLES; i++)
 	{
 		vec3 tempPos = r.rayPosition + r.rayDirection * r.currentT * 
 			((startT+float(i)) / float(NUM_FOG_SAMPLES));
-		Ray tempFogRay = createRay(tempPos, -lightDir);
+		Ray tempFogRay = createRay(tempPos, -LIGHT_DIR);
 
 		// Send ray into scene
 		raySceneIntersection(tempFogRay);
@@ -285,7 +325,7 @@ vec3 godRaysAttempt2(Ray r, vec2 uv, vec3 pixelColor)
 	vec3 litColor = pixelColor;
 
 	vec3 fogColor = mix(unlitColor, litColor, fogLitPercentage);
-	float absorb = exp(-r.currentT * fogDensity);
+	float absorb = exp(-r.currentT * FOG_DENSITY);
 
 	return mix(fogColor, pixelColor, absorb);
 }
@@ -299,27 +339,31 @@ void main()
 	uv.x *= u_resolution.x / u_resolution.y;
 
 	// Create camera
-	vec3 cameraRight = u_cameraRot[0];
-	vec3 cameraUp = u_cameraRot[1];
-	vec3 cameraForward = u_cameraRot[2];
+	vec2 unitVec = vec2(1.0, 0.0);
 
 	// Ray
 	float zoom = 1.0;
-	vec3 rayLookAtPosition = u_cameraPosition + zoom * cameraForward + uv.x * cameraRight + uv.y * cameraUp;
+	vec3 rayLookAtPosition = u_cameraPosition + 
+		zoom * unitVec.yyx + 
+		uv.x * unitVec.xyy + 
+		uv.y * unitVec.yxy;
 	vec3 rayDirection = normalize(rayLookAtPosition - u_cameraPosition);
+
+	// Rotate ray according to camera matrix
+	rayDirection = u_cameraRot * rayDirection;	
 
 	// Let the ray position be fairly close to the camera position
 	vec3 rayPosition = u_cameraPosition + rayDirection*0.01f; 
 
 
 	Ray r = createRay(rayPosition, rayDirection);
-	vec4 currentCol = vec4(1.0);
+	vec4 currentCol = vec4(0.0);
 
 	// Let the ray interact with the world
 	for(int currentRay = 0; currentRay < NUM_MAX_RAY_BOUNCES; currentRay++)
 	{
 		if(currentRay > 0)
-			r = createRay(r.rayPosition + r.rayDirection * r.currentT + r.currentNormal * 0.001f, normalize(reflect(r.rayDirection, r.currentNormal)));
+			bounceRay(r);
 
 		// Ray interacts with scene
 		raySceneIntersection(r);
@@ -328,24 +372,32 @@ void main()
 		// Ray didn't hit anything
 		if(r.currentT >= MAX_RAY_DISTANCE)
 		{
-			currentCol.rgb *= getSkyboxColor(r.rayDirection);// * godRaysAttempt1(r);
+			//currentCol.rgb += getSkyboxColor(r.rayDirection) * r.currentEnergy;
+			currentCol.rgb = mix(
+				currentCol.rgb, 
+				getSkyboxColor(r.rayDirection), 
+				r.currentEnergy * (1.0 - currentCol.a)
+			);
 
 			break;
 		}
 		
-		// Invert transparent texture color
-		if(r.currentColor.a == 0.0)
-			r.currentColor = vec4(1.0) - r.currentColor;
-
 		// God rays attempt 1
 		//currentCol *= r.currentColor * vec4(godRaysAttempt1(r), 1.0);
 
 		// God rays attempt 2
-		r.currentColor.rgb = godRaysAttempt2(r, (uv + vec2(3.0, 3.0)) * 3.12f, r.currentColor.rgb);
-		currentCol *= r.currentColor;
+		#if GOD_RAYS_ENABLED
+			r.currentColor.rgb = godRaysAttempt2(r, (uv + vec2(3.0, 3.0)) * 3.12f, r.currentColor.rgb);
+		#endif
 
-		// Recursion only if the block is a mirror
-		if(r.currentBlockIndex != 3)
+		// Apply color
+		currentCol += r.hit.currentColor * r.currentEnergy;
+		
+		// Lose energy
+		r.currentEnergy *= r.hit.specular;
+
+		// Recursion only if the ray still has energy left
+		if(r.currentEnergy <= 0.0f)
 			break;
 	}
 

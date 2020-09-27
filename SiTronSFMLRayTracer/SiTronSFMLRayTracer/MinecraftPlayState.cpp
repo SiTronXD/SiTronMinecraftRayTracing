@@ -99,12 +99,13 @@ void MinecraftPlayState::update(float dt)
     // Find all blocks to render
     std::vector<Block*> blocksToRender = worldHandler.GetBlocksToRender();
 
-    // Fill arrays with positions and indices
+    // Fill arrays with positions, indices and specular
     int numValidBlocks = SMath::min(256, blocksToRender.size());
     for (int i = 0; i < numValidBlocks; i++)
     {
         blockPositions[i] = (sf::Glsl::Vec3) blocksToRender[i]->getPosition();
         blockIndices[i] = blocksToRender[i]->getBlockTypeIndex();
+        blockSpecular[i] = blocksToRender[i]->getBlockSpecular();
     }
 
     // Package camera vectors into camera matrix
@@ -128,9 +129,11 @@ void MinecraftPlayState::update(float dt)
     rayTracingShader.setUniform("u_cameraRot", cameraRot);
 
     // Blocks
-    rayTracingShader.setUniformArray("u_blockTextureRect", Block::textureRects, Block::MAX_NUM_TEXTURE_RECTS);
-    rayTracingShader.setUniformArray("u_blocks", blockPositions, NUM_MAX_BLOCKS);
-    rayTracingShader.setUniformArray("u_blockIndex", blockIndices, NUM_MAX_BLOCKS);
+    rayTracingShader.setUniformArray("u_blockTextureRect", Block::TEXTURE_RECTS, Block::MAX_NUM_TEXTURE_RECTS);
+    rayTracingShader.setUniformArray("u_blocks", blockPositions, NUM_MAX_RENDER_BLOCKS);
+    rayTracingShader.setUniformArray("u_blockIndex", blockIndices, NUM_MAX_RENDER_BLOCKS);
+    rayTracingShader.setUniformArray("u_blockSpecular", blockSpecular, NUM_MAX_RENDER_BLOCKS);
+
     rayTracingShader.setUniform("u_numValidBlocks", numValidBlocks);
     rayTracingShader.setUniform("u_textureSheet", textureSheet);
     rayTracingShader.setUniform("u_blueNoiseTexture", blueNoiseTexture);

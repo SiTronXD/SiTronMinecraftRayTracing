@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include "Log.h"
 
 enum class BlockType
 {
@@ -24,7 +25,11 @@ public:
 	const sf::Vector3i& getPosition() const;
 
 	const int getBlockTypeIndex() const;
+	float getBlockSpecular();
 
+	static const int NUM_BLOCK_TYPES = 4;
 	static const int MAX_NUM_TEXTURE_RECTS = 12;
-	static const sf::Glsl::Vec4 textureRects[MAX_NUM_TEXTURE_RECTS];
+
+	static const sf::Glsl::Vec4 TEXTURE_RECTS[MAX_NUM_TEXTURE_RECTS];
+	static const float SPECULAR[NUM_BLOCK_TYPES];
 };
