@@ -1,6 +1,6 @@
 #version 130
 
-#define GOD_RAYS_ENABLED 0
+#define GOD_RAYS_ENABLED 1
 
 // Constants
 const int NUM_MAX_RAY_BOUNCES = 8;
@@ -387,7 +387,7 @@ void main()
 
 		// God rays attempt 2
 		#if GOD_RAYS_ENABLED
-			r.currentColor.rgb = godRaysAttempt2(r, (uv + vec2(3.0, 3.0)) * 3.12f, r.currentColor.rgb);
+			r.hit.currentColor.rgb = godRaysAttempt2(r, (uv + vec2(3.0, 3.0)) * 3.12f, r.hit.currentColor.rgb);
 		#endif
 
 		// Apply color
