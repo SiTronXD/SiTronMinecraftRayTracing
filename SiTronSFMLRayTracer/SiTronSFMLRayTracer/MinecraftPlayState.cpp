@@ -27,6 +27,11 @@ void MinecraftPlayState::init()
         rayTracingShader
     );
     Loader::loadShader(
+        "Resources/Shaders/LightmapGenerator_Vert.glsl",
+        "Resources/Shaders/LightmapGenerator_Frag.glsl",
+        lightmapGeneratorShader
+    );
+    Loader::loadShader(
         "Resources/Shaders/PostProcessingEffect_Vert.glsl",
         "Resources/Shaders/PostProcessingEffect_Frag.glsl",
         postProcessingShader
@@ -37,14 +42,21 @@ void MinecraftPlayState::init()
     Loader::loadTexture("Resources/Graphics/blueNoiseTexture.png", blueNoiseTexture);
     Loader::loadTexture("Resources/Graphics/Crosshair.png", crosshairTexture);
 
-    // Create render texture
-    if (!renderTexture.create(settingsHandler.GetWindowWidth(), settingsHandler.GetWindowHeight()))
-        Log::print("Couldn't create render texture");
-
-
     // Initialize window shader rect
     windowShaderRect.setSize(sf::Vector2f((float)settingsHandler.GetWindowWidth(), (float)settingsHandler.GetWindowHeight()));
     windowShaderRect.setFillColor(sf::Color::Green);
+
+    // Initialize lightmap shader rect
+    lightmapShaderRect.setSize(sf::Vector2f(LIGHTMAP_SIZE, LIGHTMAP_SIZE));
+    windowShaderRect.setFillColor(sf::Color::Magenta);
+
+    // Create render texture for post processing effects
+    if (!renderTexture.create(settingsHandler.GetWindowWidth(), settingsHandler.GetWindowHeight()))
+        Log::print("Couldn't create render texture");
+
+    // Create render textures for light maps
+    if(!lightmapTextures[0].create(LIGHTMAP_SIZE, LIGHTMAP_SIZE))
+        Log::print("Couldn't create render texture for up light map");
 
     player.init(&worldHandler);
     inputHandler.init(&player, &window);
@@ -65,26 +77,27 @@ void MinecraftPlayState::init()
         {
             float noiseX = x / 1000.0f;
             float noiseZ = z / 1000.0f;
-            float y = (float)floor(SMath::perlinNoise(noiseX, noiseZ) * 5.0f) - 2;
+            float y = (float)floor(SMath::perlinNoise(noiseX, noiseZ) * 5.0f) - 4;
 
-            worldHandler.AddBlock(sf::Vector3i(x - 8, y, z - 8), BlockType::Stone);
+            worldHandler.AddBlock(sf::Vector3i(x, y, z), BlockType::Stone);
         }
     }
 
-    worldHandler.AddBlock(sf::Vector3i(-2, 0, -1), BlockType::RedstoneBlock);
-    worldHandler.AddBlock(sf::Vector3i(-3, 0, -1), BlockType::RedstoneBlock);
-    worldHandler.AddBlock(sf::Vector3i(-2, 1, -1), BlockType::RedstoneBlock);
-    worldHandler.AddBlock(sf::Vector3i(-3, 1, -1), BlockType::RedstoneBlock);
+    // Redstone blocks to test god rays
+    worldHandler.AddBlock(sf::Vector3i(6, -2, 7), BlockType::RedstoneBlock);
+    worldHandler.AddBlock(sf::Vector3i(5, -2, 7), BlockType::RedstoneBlock);
+    worldHandler.AddBlock(sf::Vector3i(6, -1, 7), BlockType::RedstoneBlock);
+    worldHandler.AddBlock(sf::Vector3i(5, -1, 7), BlockType::RedstoneBlock);
 
-    worldHandler.AddBlock(sf::Vector3i(-1, 0, -2), BlockType::RedstoneBlock);
-    worldHandler.AddBlock(sf::Vector3i(-1, 0, -3), BlockType::RedstoneBlock);
-    worldHandler.AddBlock(sf::Vector3i(-1, 1, -3), BlockType::RedstoneBlock);
+    worldHandler.AddBlock(sf::Vector3i(7, -2, 6), BlockType::RedstoneBlock);
+    worldHandler.AddBlock(sf::Vector3i(7, -2, 5), BlockType::RedstoneBlock);
+    worldHandler.AddBlock(sf::Vector3i(7, -1, 5), BlockType::RedstoneBlock);
+
+    worldHandler.AddBlock(sf::Vector3i(6, 0, 6), BlockType::RedstoneBlock);
+    worldHandler.AddBlock(sf::Vector3i(5, 0, 6), BlockType::RedstoneBlock);
 
 
-    worldHandler.AddBlock(sf::Vector3i(-2, 2, -2), BlockType::RedstoneBlock);
-    worldHandler.AddBlock(sf::Vector3i(-3, 2, -2), BlockType::RedstoneBlock);
-
-    timer = 0.0f;
+    this->iterateOverLightmaps();
 }
 
 void MinecraftPlayState::handleInput(float dt)
@@ -101,6 +114,11 @@ void MinecraftPlayState::update(float dt)
 
     // Fill arrays with positions, indices and specular
     int numValidBlocks = SMath::min(256, blocksToRender.size());
+
+    sf::Glsl::Vec3 blockPositions[NUM_MAX_RENDER_BLOCKS]{};	    // Positions for each block
+    float blockIndices[NUM_MAX_RENDER_BLOCKS]{};				// Index for each block
+    float blockSpecular[NUM_MAX_RENDER_BLOCKS]{};				// Specular for each block
+
     for (int i = 0; i < numValidBlocks; i++)
     {
         blockPositions[i] = (sf::Glsl::Vec3) blocksToRender[i]->getPosition();
@@ -137,6 +155,7 @@ void MinecraftPlayState::update(float dt)
     rayTracingShader.setUniform("u_numValidBlocks", numValidBlocks);
     rayTracingShader.setUniform("u_textureSheet", textureSheet);
     rayTracingShader.setUniform("u_blueNoiseTexture", blueNoiseTexture);
+    rayTracingShader.setUniform("u_lightMapUpTexture", lightmapTextures[0].getTexture());
 
     // Other shader uniforms
     rayTracingShader.setUniform("u_resolution", sf::Glsl::Vec2((float)settingsHandler.GetWindowWidth(), (float)settingsHandler.GetWindowHeight()));
@@ -154,4 +173,25 @@ void MinecraftPlayState::draw()
     postProcessingShader.setUniform("u_mainTexture", renderTexture.getTexture());
     postProcessingShader.setUniform("u_resolution", sf::Glsl::Vec2((float)settingsHandler.GetWindowWidth(), (float)settingsHandler.GetWindowHeight()));
     window.draw(windowShaderRect, &postProcessingShader);
+}
+
+void MinecraftPlayState::iterateOverLightmaps()
+{
+    std::vector<Block*> blocksToRender = worldHandler.GetBlocksToRender();
+    int numValidBlocks = SMath::min(256, blocksToRender.size());
+
+    sf::Glsl::Vec3 blockPositions[NUM_MAX_RENDER_BLOCKS]{};	    // Positions for each block
+
+    for (int i = 0; i < numValidBlocks; i++)
+    {
+        blockPositions[i] = (sf::Glsl::Vec3) blocksToRender[i]->getPosition();
+    }
+
+    // Update shader
+    lightmapGeneratorShader.setUniform("u_numValidBlocks", numValidBlocks);
+    lightmapGeneratorShader.setUniformArray("u_blocks", blockPositions, NUM_MAX_RENDER_BLOCKS);
+
+    // Generate lightmaps
+    lightmapTextures[0].draw(lightmapShaderRect, &lightmapGeneratorShader);
+    lightmapTextures[0].display();
 }

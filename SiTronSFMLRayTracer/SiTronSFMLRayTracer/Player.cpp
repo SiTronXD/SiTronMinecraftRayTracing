@@ -2,7 +2,7 @@
 
 Player::Player()
 {
-	position = sf::Vector3f(0.0f, 0.0f, -3.0f);
+	position = sf::Vector3f(4.0f, 0.0f, 4.0f);
 
 	direction = sf::Vector2f(0.0f, 0.0f);
 

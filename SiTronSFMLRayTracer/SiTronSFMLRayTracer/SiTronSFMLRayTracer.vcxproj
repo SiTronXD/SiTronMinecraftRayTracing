@@ -167,6 +167,8 @@
     <ClCompile Include="WorldHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\Shaders\LightmapGenerator_Frag.glsl" />
+    <None Include="Resources\Shaders\LightmapGenerator_Vert.glsl" />
     <None Include="Resources\Shaders\PostProcessingEffect_Frag.glsl" />
     <None Include="Resources\Shaders\PostProcessingEffect_Vert.glsl" />
     <None Include="Resources\Shaders\RayTracing_Frag.glsl" />

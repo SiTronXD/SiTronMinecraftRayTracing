@@ -10,7 +10,11 @@
 class MinecraftPlayState : public Gamestate
 {
 private:
+	static const uint32_t NUM_MAX_RENDER_BLOCKS = 256;
+	static const uint32_t LIGHTMAP_SIZE = 1024;
+
 	sf::Shader rayTracingShader;
+	sf::Shader lightmapGeneratorShader;
 	sf::Shader postProcessingShader;
 
 	sf::Texture textureSheet;
@@ -18,8 +22,10 @@ private:
 	sf::Texture crosshairTexture;
 
 	sf::RenderTexture renderTexture;
+	sf::RenderTexture lightmapTextures[3];
 
 	sf::RectangleShape windowShaderRect; 
+	sf::RectangleShape lightmapShaderRect;
 	sf::RectangleShape crosshairRect;
 
 	SettingsHandler settingsHandler;
@@ -27,12 +33,7 @@ private:
 	InputHandler inputHandler;
 	Player player;
 
-	static const int NUM_MAX_RENDER_BLOCKS = 256;
-	sf::Glsl::Vec3 blockPositions[NUM_MAX_RENDER_BLOCKS] {};	// Positions for each block
-	float blockIndices[NUM_MAX_RENDER_BLOCKS] {};				// Index for each block
-	float blockSpecular[NUM_MAX_RENDER_BLOCKS] {};				// Specular for each block
-
-	float timer;
+	float timer = 0.0f;
 
 public:
 	MinecraftPlayState(sf::RenderWindow& _window);
@@ -42,4 +43,6 @@ public:
 	virtual void handleInput(float dt);
 	virtual void update(float dt);
 	virtual void draw();
+
+	void iterateOverLightmaps();
 };

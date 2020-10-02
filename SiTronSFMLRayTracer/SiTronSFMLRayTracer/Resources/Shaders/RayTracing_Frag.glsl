@@ -1,11 +1,12 @@
 #version 130
 
-#define GOD_RAYS_ENABLED 1
+#define GOD_RAYS_ENABLED 0
 
 // Constants
 const int NUM_MAX_RAY_BOUNCES = 8;
 const int NUM_MAX_BLOCKS = 256;
 const int NUM_MAX_TEXTURERECTS = 12;
+const int CHUNK_WIDTH_LENGTH = 8;
 
 const vec3 LIGHT_DIR = normalize(vec3(-1.0));
 const int NUM_FOG_SAMPLES = 8;
@@ -32,6 +33,7 @@ uniform vec4 u_blockTextureRect[NUM_MAX_TEXTURERECTS];
 
 uniform sampler2D u_textureSheet;
 uniform sampler2D u_blueNoiseTexture;
+uniform sampler2D u_lightMapUpTexture;
 
 // Non-uniforms
 vec2 oneOverTextureSize = vec2(1.0) / textureSize(u_textureSheet, 0).xy;
@@ -143,6 +145,8 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 	int blockIndex = int(u_blockIndex[loopIndex]);
 	int textureIndexOffset = 3 * blockIndex;
 
+	bool wasUpDown = false;
+
 	// Horizontal sides
 	if(t == t1 || t == t2)
 	{
@@ -178,6 +182,8 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 
 			r.hit.currentNormal = vec3(0.0, -1.0, 0.0);
 		}
+
+		wasUpDown = true;
 	}
 	// Other sides
 	else if(t == t5 || t == t6)
@@ -195,7 +201,13 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 	r.currentT = t;
 	r.hit.currentBlockIndex = blockIndex;
 	r.hit.specular = u_blockSpecular[loopIndex];
-	r.hit.currentColor = texture2D(u_textureSheet, tempUV);
+	//r.hit.currentColor = texture2D(u_textureSheet, tempUV);
+
+	if(!wasUpDown)
+		r.hit.currentColor = vec4(vec3(0.1f), 1.0f);
+	else
+		r.hit.currentColor = texture2D(u_lightMapUpTexture, 
+			(worldIntersectionPoint.xz+vec2(0.5f)) / vec2(CHUNK_WIDTH_LENGTH));
 }
 
 void raySphereIntersection(inout Ray r, vec3 spherePos, float sphereRadius)
@@ -252,7 +264,7 @@ vec3 getSkyboxColor(vec3 rayDirection)
 	vec3 topColor = vec3(0.85, 0.85, 0.95);
 	vec3 bottomColor = vec3(0.4, 0.4, 0.7);
 	vec3 skyColor = mix(bottomColor, topColor, t);
-	vec3 sunColor = vec3(0.98, 0.93, 0.6);
+	vec3 sunColor = vec3(0.98, 0.91, 0.6);
 
 	float isSun = 0.0;
 	isSun = smoothstep(0.97, 1.0, dot(rayDirection, -LIGHT_DIR));
