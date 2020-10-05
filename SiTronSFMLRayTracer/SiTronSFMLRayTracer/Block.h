@@ -24,12 +24,14 @@ public:
 
 	const sf::Vector3i& getPosition() const;
 
-	const int getBlockTypeIndex() const;
-	float getBlockSpecular();
+	int getBlockTypeIndex() const;
+	float getBlockSpecular() const;
+	float getBlockTransparency() const;
 
 	static const int NUM_BLOCK_TYPES = 4;
 	static const int MAX_NUM_TEXTURE_RECTS = 12;
 
 	static const sf::Glsl::Vec4 TEXTURE_RECTS[MAX_NUM_TEXTURE_RECTS];
 	static const float SPECULAR[NUM_BLOCK_TYPES];
+	static const float TRANSPARENCY[NUM_BLOCK_TYPES];
 };

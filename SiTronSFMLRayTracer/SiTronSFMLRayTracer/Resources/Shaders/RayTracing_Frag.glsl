@@ -1,6 +1,14 @@
 #version 130
 
-#define GOD_RAYS_ENABLED 0
+// Mode 0: Stochastic transparency using blue noise
+// Mode 1: Stochastic transparency using animated blue noise
+// Mode 2: Screen-door transparency
+#define TRANSPARENCY_MODE 0
+
+// Enable/disable god rays
+#define GOD_RAYS_ENABLED 1
+
+
 
 // Constants
 const int NUM_MAX_RAY_BOUNCES = 8;
@@ -19,13 +27,19 @@ uniform int u_numValidBlocks;
 const float MAX_RAY_DISTANCE = 64.0;
 
 uniform float u_time;
-uniform float u_blockIndex[NUM_MAX_BLOCKS];
-uniform float u_blockSpecular[NUM_MAX_BLOCKS];
+//uniform float u_blockIndex[NUM_MAX_BLOCKS];
+//uniform float u_blockSpecular[NUM_MAX_BLOCKS];
+//uniform float u_blockTransparency[NUM_MAX_BLOCKS];
 
 uniform vec2 u_resolution;
 
 uniform vec3 u_cameraPosition;
 uniform vec3 u_blocks[NUM_MAX_BLOCKS];
+
+// x: u_blockIndex
+// y: u_blockSpecular
+// z: u_blockTransparency
+uniform vec3 u_blockInfo[NUM_MAX_BLOCKS];
 
 uniform mat3x3 u_cameraRot;
 
@@ -110,6 +124,42 @@ float squaredLength(vec3 p)
 	return p.x*p.x + p.y*p.y + p.z*p.z;
 }
 
+bool isTransparent(float alpha, vec2 normalizedUV)
+{
+	float transparencyThreshold = 0.0f;
+	
+	// Blue noise
+	#if (TRANSPARENCY_MODE == 0)
+
+		transparencyThreshold = texture(u_blueNoiseTexture, normalizedUV).x;
+		
+	// Animated blue noise
+	#elif (TRANSPARENCY_MODE == 1)
+
+		transparencyThreshold = texture(u_blueNoiseTexture, normalizedUV).x;
+		
+		// Animate noise
+		transparencyThreshold = fract(transparencyThreshold + (u_time * 10.0) * GOLDEN_RATIO_CONJUGATE);
+
+	// Screen-door
+	#elif (TRANSPARENCY_MODE == 2)
+
+		const int pixelSizeFactor = 10;
+		const float gridSizeFactor = 40.0;
+
+		float s = pixelSizeFactor * 2.0 - 1.0;
+		vec2 st = normalizedUV * gridSizeFactor;
+		float c1 = abs(round((fract(st.x)-0.5) * (s+1.0)) / s);
+		float c2 = abs(round((fract(st.y)-0.5) * (s+1.0)) / s);
+    
+		transparencyThreshold = clamp(c1 + c2, 0.05f, 0.95f);
+
+	#endif
+
+
+	return alpha < transparencyThreshold;
+}
+
 void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner, 
 	int loopIndex)
 {
@@ -139,10 +189,11 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 	intersectionPoint += vec3(0.5);
 	intersectionPoint = fract(intersectionPoint);
 	intersectionPoint.y = 1.0 - intersectionPoint.y;
-
+	
+	vec2 normalizedUV = vec2(0.0);
 	vec2 tempUV = vec2(0.0);
 
-	int blockIndex = int(u_blockIndex[loopIndex]);
+	int blockIndex = int(u_blockInfo[loopIndex].x);
 	int textureIndexOffset = 3 * blockIndex;
 
 	bool wasUpDown = false;
@@ -150,11 +201,11 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 	// Horizontal sides
 	if(t == t1 || t == t2)
 	{
-		tempUV = vec2(intersectionPoint.z, intersectionPoint.y);
+		normalizedUV = vec2(intersectionPoint.z, intersectionPoint.y);
 
 		tempUV = vec2(
-			(u_blockTextureRect[textureIndexOffset + 1].x + tempUV.x * u_blockTextureRect[textureIndexOffset + 1].z) * oneOverTextureSize.x,
-			(u_blockTextureRect[textureIndexOffset + 1].y + tempUV.y * u_blockTextureRect[textureIndexOffset + 1].w) * oneOverTextureSize.y
+			(u_blockTextureRect[textureIndexOffset + 1].x + normalizedUV.x * u_blockTextureRect[textureIndexOffset + 1].z) * oneOverTextureSize.x,
+			(u_blockTextureRect[textureIndexOffset + 1].y + normalizedUV.y * u_blockTextureRect[textureIndexOffset + 1].w) * oneOverTextureSize.y
 		);
 
 		r.hit.currentNormal = vec3(t == t1 ? -1.0 : 1.0, 0.0, 0.0);
@@ -162,13 +213,13 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 	// Top or bottom
 	else if(t == t3 || t == t4)
 	{
-		tempUV = vec2(intersectionPoint.x, intersectionPoint.z);
+		normalizedUV = vec2(intersectionPoint.x, intersectionPoint.z);
 
 		if(worldIntersectionPoint.y - minCorner.y >= 0.5)
 		{
 			tempUV = vec2(
-				(u_blockTextureRect[textureIndexOffset + 0].x + tempUV.x * u_blockTextureRect[textureIndexOffset + 0].z) * oneOverTextureSize.x,
-				(u_blockTextureRect[textureIndexOffset + 0].y + tempUV.y * u_blockTextureRect[textureIndexOffset + 0].w) * oneOverTextureSize.y
+				(u_blockTextureRect[textureIndexOffset + 0].x + normalizedUV.x * u_blockTextureRect[textureIndexOffset + 0].z) * oneOverTextureSize.x,
+				(u_blockTextureRect[textureIndexOffset + 0].y + normalizedUV.y * u_blockTextureRect[textureIndexOffset + 0].w) * oneOverTextureSize.y
 			);
 			
 			r.hit.currentNormal = vec3(0.0, 1.0, 0.0);
@@ -176,8 +227,8 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 		else
 		{
 			tempUV = vec2(
-				(u_blockTextureRect[textureIndexOffset + 2].x + tempUV.x * u_blockTextureRect[textureIndexOffset + 2].z) * oneOverTextureSize.x,
-				(u_blockTextureRect[textureIndexOffset + 2].y + tempUV.y * u_blockTextureRect[textureIndexOffset + 2].w) * oneOverTextureSize.y
+				(u_blockTextureRect[textureIndexOffset + 2].x + normalizedUV.x * u_blockTextureRect[textureIndexOffset + 2].z) * oneOverTextureSize.x,
+				(u_blockTextureRect[textureIndexOffset + 2].y + normalizedUV.y * u_blockTextureRect[textureIndexOffset + 2].w) * oneOverTextureSize.y
 			);
 
 			r.hit.currentNormal = vec3(0.0, -1.0, 0.0);
@@ -188,26 +239,32 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 	// Other sides
 	else if(t == t5 || t == t6)
 	{
-		tempUV = vec2(intersectionPoint.x, intersectionPoint.y);
+		normalizedUV = vec2(intersectionPoint.x, intersectionPoint.y);
 
 		tempUV = vec2(
-			(u_blockTextureRect[textureIndexOffset + 1].x + tempUV.x * u_blockTextureRect[textureIndexOffset + 1].z) * oneOverTextureSize.x,
-			(u_blockTextureRect[textureIndexOffset + 1].y + tempUV.y * u_blockTextureRect[textureIndexOffset + 1].w) * oneOverTextureSize.y
+			(u_blockTextureRect[textureIndexOffset + 1].x + normalizedUV.x * u_blockTextureRect[textureIndexOffset + 1].z) * oneOverTextureSize.x,
+			(u_blockTextureRect[textureIndexOffset + 1].y + normalizedUV.y * u_blockTextureRect[textureIndexOffset + 1].w) * oneOverTextureSize.y
 		);
 		
 		r.hit.currentNormal = vec3(0.0, 0.0, t == t5 ? -1.0 : 1.0);
 	}
 
+	// Transparency test
+	if(isTransparent(u_blockInfo[loopIndex].z, normalizedUV))
+	{
+		return;
+	}
+
 	r.currentT = t;
 	r.hit.currentBlockIndex = blockIndex;
-	r.hit.specular = u_blockSpecular[loopIndex];
-	//r.hit.currentColor = texture2D(u_textureSheet, tempUV);
+	r.hit.specular = u_blockInfo[loopIndex].y;
+	r.hit.currentColor = texture2D(u_textureSheet, tempUV);
 
-	if(!wasUpDown)
+	/*if(!wasUpDown)
 		r.hit.currentColor = vec4(vec3(0.1f), 1.0f);
 	else
 		r.hit.currentColor = texture2D(u_lightMapUpTexture, 
-			(worldIntersectionPoint.xz+vec2(0.5f)) / vec2(CHUNK_WIDTH_LENGTH));
+			(worldIntersectionPoint.xz+vec2(0.5f)) / vec2(CHUNK_WIDTH_LENGTH));*/
 }
 
 void raySphereIntersection(inout Ray r, vec3 spherePos, float sphereRadius)
@@ -243,7 +300,7 @@ void raySphereIntersection(inout Ray r, vec3 spherePos, float sphereRadius)
 	}
 }
 
-void raySceneIntersection(inout Ray r)
+void raySceneIntersection(inout Ray r, vec2 correctUV)
 {
 	for(int i = 0; i < u_numValidBlocks; i++)
 	{
@@ -311,11 +368,13 @@ vec3 godRaysAttempt1(Ray r)
 	return mix(shadowCol, vec3(1.0), godRay);
 }
 
-vec3 godRaysAttempt2(Ray r, vec2 uv, vec3 pixelColor)
+vec3 godRaysAttempt2(Ray r, vec2 correctUV, vec3 pixelColor)
 {
-	float startT = texture(u_blueNoiseTexture, fract(abs(uv))).r;
+	// Start ray position
+	float startT = texture(u_blueNoiseTexture, correctUV).r;
 	startT = fract(startT + (u_time * 500.0) * GOLDEN_RATIO_CONJUGATE);
 
+	// Collect samples
 	float fogLitPercentage = 0.0f;
 	for(int i = 0; i < NUM_FOG_SAMPLES; i++)
 	{
@@ -324,7 +383,7 @@ vec3 godRaysAttempt2(Ray r, vec2 uv, vec3 pixelColor)
 		Ray tempFogRay = createRay(tempPos, -LIGHT_DIR);
 
 		// Send ray into scene
-		raySceneIntersection(tempFogRay);
+		raySceneIntersection(tempFogRay, correctUV);
 
 		fogLitPercentage = mix(
 			fogLitPercentage, 
@@ -333,6 +392,7 @@ vec3 godRaysAttempt2(Ray r, vec2 uv, vec3 pixelColor)
 		);
 	}
 
+	// Calculate color
 	vec3 unlitColor = vec3(0.0);
 	vec3 litColor = pixelColor;
 
@@ -345,10 +405,13 @@ vec3 godRaysAttempt2(Ray r, vec2 uv, vec3 pixelColor)
 void main()
 {
 	// UV coordinates
-	// x: -1.7 to 1.7
-	// y: -1 to 1
     vec2 uv = (gl_FragCoord.xy / u_resolution) * 2.0 - 1.0;
 	uv.x *= u_resolution.x / u_resolution.y;
+
+	// UV coordinates for sampling textures in screen space
+	vec2 correctUV = 
+		fract((gl_FragCoord.xy / u_resolution) * 
+		vec2(u_resolution.x / u_resolution.y, 1.0));
 
 	// Create camera
 	vec2 unitVec = vec2(1.0, 0.0);
@@ -378,7 +441,7 @@ void main()
 			bounceRay(r);
 
 		// Ray interacts with scene
-		raySceneIntersection(r);
+		raySceneIntersection(r, correctUV);
 
 		
 		// Ray didn't hit anything
@@ -399,7 +462,7 @@ void main()
 
 		// God rays attempt 2
 		#if GOD_RAYS_ENABLED
-			r.hit.currentColor.rgb = godRaysAttempt2(r, (uv + vec2(3.0, 3.0)) * 3.12f, r.hit.currentColor.rgb);
+			r.hit.currentColor.rgb = godRaysAttempt2(r, correctUV, r.hit.currentColor.rgb);
 		#endif
 
 		// Apply color

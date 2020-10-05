@@ -27,6 +27,14 @@ const float Block::SPECULAR[] =
     0.9f
 };
 
+const float Block::TRANSPARENCY[] =
+{
+    1.0f,
+    1.0f,
+    1.0f,
+    1.0f
+};
+
 Block::Block(sf::Vector3i _position, BlockType _blockType)
 {
 	this->position = _position;
@@ -40,15 +48,20 @@ Block::~Block()
 
 const sf::Vector3i& Block::getPosition() const
 {
-	return position;
+	return this->position;
 }
 
-const int Block::getBlockTypeIndex() const
+int Block::getBlockTypeIndex() const
 {
-	return (int) blockType;
+	return (int) this->blockType;
 }
 
-float Block::getBlockSpecular()
+float Block::getBlockSpecular() const
 {
-    return SPECULAR[(int)blockType];
+    return SPECULAR[(int) this->blockType];
+}
+
+float Block::getBlockTransparency() const
+{
+    return TRANSPARENCY[(int) this->blockType];
 }

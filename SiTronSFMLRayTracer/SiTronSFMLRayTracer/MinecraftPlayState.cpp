@@ -115,15 +115,28 @@ void MinecraftPlayState::update(float dt)
     // Fill arrays with positions, indices and specular
     int numValidBlocks = SMath::min(256, blocksToRender.size());
 
-    sf::Glsl::Vec3 blockPositions[NUM_MAX_RENDER_BLOCKS]{};	    // Positions for each block
-    float blockIndices[NUM_MAX_RENDER_BLOCKS]{};				// Index for each block
-    float blockSpecular[NUM_MAX_RENDER_BLOCKS]{};				// Specular for each block
+    sf::Glsl::Vec3 blockPositions[NUM_MAX_RENDER_BLOCKS] {};    // Positions for each block
 
+    // X: Index for each block
+    // Y: Specular for each block
+    // Z: Transparency for each block
+    sf::Glsl::Vec3 blockInfo[NUM_MAX_RENDER_BLOCKS] {};
+
+    // Find and pack information
     for (int i = 0; i < numValidBlocks; i++)
     {
         blockPositions[i] = (sf::Glsl::Vec3) blocksToRender[i]->getPosition();
-        blockIndices[i] = blocksToRender[i]->getBlockTypeIndex();
-        blockSpecular[i] = blocksToRender[i]->getBlockSpecular();
+
+        // Change alpha over time
+        float o = blocksToRender[i]->getBlockTypeIndex() != 0 ? 1.0 :
+            (sin(timer) * 0.5 + 0.5);
+
+        // Pack vec3 with information
+        blockInfo[i] = sf::Glsl::Vec3(
+            blocksToRender[i]->getBlockTypeIndex(), 
+            blocksToRender[i]->getBlockSpecular(),
+            blocksToRender[i]->getBlockTransparency() * o
+        );
     }
 
     // Package camera vectors into camera matrix
@@ -149,8 +162,7 @@ void MinecraftPlayState::update(float dt)
     // Blocks
     rayTracingShader.setUniformArray("u_blockTextureRect", Block::TEXTURE_RECTS, Block::MAX_NUM_TEXTURE_RECTS);
     rayTracingShader.setUniformArray("u_blocks", blockPositions, NUM_MAX_RENDER_BLOCKS);
-    rayTracingShader.setUniformArray("u_blockIndex", blockIndices, NUM_MAX_RENDER_BLOCKS);
-    rayTracingShader.setUniformArray("u_blockSpecular", blockSpecular, NUM_MAX_RENDER_BLOCKS);
+    rayTracingShader.setUniformArray("u_blockInfo", blockInfo, NUM_MAX_RENDER_BLOCKS);
 
     rayTracingShader.setUniform("u_numValidBlocks", numValidBlocks);
     rayTracingShader.setUniform("u_textureSheet", textureSheet);
