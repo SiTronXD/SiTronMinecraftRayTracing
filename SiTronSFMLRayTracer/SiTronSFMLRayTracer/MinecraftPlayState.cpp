@@ -78,6 +78,7 @@ void MinecraftPlayState::init()
             float noiseX = x / 1000.0f;
             float noiseZ = z / 1000.0f;
             float y = (float)floor(SMath::perlinNoise(noiseX, noiseZ) * 5.0f) - 4;
+            y = SMath::clamp(y, -3, 0);
 
             worldHandler.AddBlock(sf::Vector3i(x, y, z), BlockType::Stone);
         }

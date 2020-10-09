@@ -20,6 +20,7 @@ const vec3 LIGHT_DIR = normalize(vec3(-1.0));
 const int NUM_FOG_SAMPLES = 8;
 const float FOG_DENSITY = 0.5;
 const float GOLDEN_RATIO_CONJUGATE = 0.618033f; // also just fract(goldenRatio)
+const float MAX_RAY_DISTANCE = 64.0;
 
 const float screenDoorGridSize = 80.0;
 const float bayerMatrix8x8[8*8] = float[]
@@ -36,8 +37,6 @@ const float bayerMatrix8x8[8*8] = float[]
 
 // Uniforms
 uniform int u_numValidBlocks;
-
-const float MAX_RAY_DISTANCE = 64.0;
 
 uniform float u_time;
 
@@ -278,11 +277,19 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 	r.hit.specular = u_blockInfo[loopIndex].y;
 	r.hit.currentColor = texture2D(u_textureSheet, tempUV);
 
-	/*if(!wasUpDown)
+	if(!wasUpDown)
 		r.hit.currentColor = vec4(vec3(0.1f), 1.0f);
 	else
-		r.hit.currentColor = texture2D(u_lightMapUpTexture, 
-			(worldIntersectionPoint.xz+vec2(0.5f)) / vec2(CHUNK_WIDTH_LENGTH));*/
+	{
+		// 0 is top, 3 is bottom
+		float yPos = round(-worldIntersectionPoint.y + 0.5f);
+
+		vec2 realUV = (worldIntersectionPoint.xz + vec2(0.5f)) / vec2(CHUNK_WIDTH_LENGTH);
+		vec2 uvOffset = vec2(int(yPos) % 2, floor(yPos * 0.5f) * 0.5f);
+		vec2 planeUV = fract(realUV * 2.0f) * 0.5f;
+
+		r.hit.currentColor = texture2D(u_lightMapUpTexture, uvOffset + planeUV);
+	}
 }
 
 void raySphereIntersection(inout Ray r, vec3 spherePos, float sphereRadius)
