@@ -200,11 +200,17 @@ void MinecraftPlayState::iterateOverLightmaps()
         blockPositions[i] = (sf::Glsl::Vec3) blocksToRender[i]->getPosition();
     }
 
-    // Update shader
-    lightmapGeneratorShader.setUniform("u_numValidBlocks", numValidBlocks);
-    lightmapGeneratorShader.setUniformArray("u_blocks", blockPositions, NUM_MAX_RENDER_BLOCKS);
+    for (int i = 0; i < 16; i++)
+    {
+        // Update shader
+        this->lightmapGeneratorShader.setUniform("u_numValidBlocks", numValidBlocks);
+        this->lightmapGeneratorShader.setUniformArray("u_blocks", blockPositions, NUM_MAX_RENDER_BLOCKS);
+        this->lightmapGeneratorShader.setUniform("u_currentIteration", currentLightmapIteration);
 
-    // Generate lightmaps
-    lightmapTextures[0].draw(lightmapShaderRect, &lightmapGeneratorShader);
-    lightmapTextures[0].display();
+        // Generate lightmaps
+        this->lightmapTextures[0].draw(lightmapShaderRect, &lightmapGeneratorShader);
+        this->lightmapTextures[0].display();
+
+        this->currentLightmapIteration++;
+    }
 }

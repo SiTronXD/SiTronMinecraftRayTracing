@@ -35,6 +35,8 @@ private:
 
 	float timer = 0.0f;
 
+	int currentLightmapIteration = 0;
+
 public:
 	MinecraftPlayState(sf::RenderWindow& _window);
 	virtual ~MinecraftPlayState();

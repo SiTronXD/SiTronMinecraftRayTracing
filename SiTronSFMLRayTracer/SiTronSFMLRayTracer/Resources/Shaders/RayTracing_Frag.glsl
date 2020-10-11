@@ -6,7 +6,7 @@
 #define TRANSPARENCY_MODE 2
 
 // Enable/disable god rays
-#define GOD_RAYS_ENABLED 1
+#define GOD_RAYS_ENABLED 0
 
 
 
@@ -213,7 +213,7 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 	int blockIndex = int(u_blockInfo[loopIndex].x);
 	int textureIndexOffset = 3 * blockIndex;
 
-	bool wasUpDown = false;
+	bool normalWasVertical = false;
 
 	// Horizontal sides
 	if(t == t1 || t == t2)
@@ -251,7 +251,7 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 			r.hit.currentNormal = vec3(0.0, -1.0, 0.0);
 		}
 
-		wasUpDown = true;
+		normalWasVertical = true;
 	}
 	// Other sides
 	else if(t == t5 || t == t6)
@@ -277,12 +277,13 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 	r.hit.specular = u_blockInfo[loopIndex].y;
 	r.hit.currentColor = texture2D(u_textureSheet, tempUV);
 
-	if(!wasUpDown)
+	if(!normalWasVertical)
 		r.hit.currentColor = vec4(vec3(0.1f), 1.0f);
 	else
 	{
 		// 0 is top, 3 is bottom
 		float yPos = round(-worldIntersectionPoint.y + 0.5f);
+		yPos = clamp(yPos, 0.0, 3.0);
 
 		vec2 realUV = (worldIntersectionPoint.xz + vec2(0.5f)) / vec2(CHUNK_WIDTH_LENGTH);
 		vec2 uvOffset = vec2(int(yPos) % 2, floor(yPos * 0.5f) * 0.5f);
@@ -437,6 +438,14 @@ void main()
 	vec2 correctUV = 
 		fract((gl_FragCoord.xy / u_resolution) * 
 		vec2(u_resolution.x / u_resolution.y, 1.0));
+
+	// Debug u_lightMapUpTexture
+	if(correctUV.x < 0.2 && correctUV.y < 0.2 && uv.x < 0.0)
+	{
+		gl_FragColor = vec4(texture2D(u_lightMapUpTexture, correctUV/vec2(0.2)).rgb, 1.0);
+
+		return;
+	}
 
 	// Create camera
 	vec2 unitVec = vec2(1.0, 0.0);
