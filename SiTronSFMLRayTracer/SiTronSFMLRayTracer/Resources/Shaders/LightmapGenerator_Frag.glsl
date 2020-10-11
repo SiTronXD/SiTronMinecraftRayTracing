@@ -1,20 +1,23 @@
 #version 130
 
 // Constants
-const int LIGHTMAP_SIZE = 1024;
 const int NUM_MAX_BLOCKS = 256;
 const int CHUNK_WIDTH_LENGTH = 8;
 const int CHUNK_HEIGHT = 4;
-const int MAX_RAY_BOUNCES = 8;
+const int MAX_RAY_BOUNCES = 16;
 
 const float MAX_RAY_DISTANCE = 64.0;
 const float TWO_PI = 3.141592f * 2.0f;
+const float RAY_SHORT_OFFSET = 0.0001f;
 
 // Uniforms
 uniform int u_numValidBlocks;
 uniform int u_currentIteration;
+uniform int u_lightmapSize;
 
 uniform vec3 u_blocks[NUM_MAX_BLOCKS];
+
+uniform sampler2D u_lastFrameTexture;
 
 uint wang_hash(inout uint seed)
 {
@@ -38,7 +41,7 @@ vec3 randomUnitVector(inout uint state)
 	float angle = randomFloat01(state) * TWO_PI;
 	float radius = sqrt(1.0f - z*z);
 	float x = radius * cos(angle);
-	float y = cos(angle);
+	float y = radius * sin(angle);
 
 	return vec3(x, y, z);
 }
@@ -66,7 +69,7 @@ struct Ray
 {
 	vec3 position;
 	vec3 direction;
-	vec3 oneOverRayDirection;
+	vec3 oneOverDirection;
 
 	float currentT;
 
@@ -78,7 +81,7 @@ Ray createRay(vec3 pos, vec3 dir)
 	Ray r;
 	r.position = pos;
 	r.direction = dir;
-	r.oneOverRayDirection = vec3(1.0) / dir;
+	r.oneOverDirection = vec3(1.0) / dir;
 
 	r.currentT = MAX_RAY_DISTANCE;
 
@@ -87,16 +90,20 @@ Ray createRay(vec3 pos, vec3 dir)
 	return r;
 }
 
+float squaredLength(vec3 p)
+{
+	return dot(p, p);
+}
 
 void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner, 
-	int loopIndex)
+	vec3 emissive)
 {
-	float t1 = (minCorner.x - r.position.x) * r.oneOverRayDirection.x;
-	float t2 = (maxCorner.x - r.position.x) * r.oneOverRayDirection.x;
-	float t3 = (minCorner.y - r.position.y) * r.oneOverRayDirection.y;
-	float t4 = (maxCorner.y - r.position.y) * r.oneOverRayDirection.y;
-	float t5 = (minCorner.z - r.position.z) * r.oneOverRayDirection.z;
-	float t6 = (maxCorner.z - r.position.z) * r.oneOverRayDirection.z;
+	float t1 = (minCorner.x - r.position.x) * r.oneOverDirection.x;
+	float t2 = (maxCorner.x - r.position.x) * r.oneOverDirection.x;
+	float t3 = (minCorner.y - r.position.y) * r.oneOverDirection.y;
+	float t4 = (maxCorner.y - r.position.y) * r.oneOverDirection.y;
+	float t5 = (minCorner.z - r.position.z) * r.oneOverDirection.z;
+	float t6 = (maxCorner.z - r.position.z) * r.oneOverDirection.z;
 
 	float tMin = max(max(min(t1, t2), min(t3, t4)), min(t5, t6));
 	float tMax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6));
@@ -149,17 +156,17 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 
 	r.currentT = t;
 
-	r.hit.albedo = vec3(1.0f, 0.1f, 0.1f);
-	r.hit.emissive = vec3(0.0f, 0.0f, 0.0f);
+	r.hit.albedo = vec3(0.0f, 0.0f, 0.0f);
+	r.hit.emissive = emissive;
 }
 
 void raySphereIntersection(inout Ray r, vec3 spherePos, float sphereRadius)
 {
-	vec3 rayToSphere = spherePos - r.rayPosition;
+	vec3 rayToSphere = spherePos - r.position;
 
 	// Project and find the closest point on the ray to the sphere
-	float projectedPointT = dot(rayToSphere, r.rayDirection); 
-	vec3 closestPoint = r.rayPosition + r.rayDirection * projectedPointT;
+	float projectedPointT = dot(rayToSphere, r.direction); 
+	vec3 closestPoint = r.position + r.direction * projectedPointT;
 
 	// Check if the point is inside the sphere
 	float squaredLengthToSphere = squaredLength(closestPoint - spherePos);
@@ -176,14 +183,14 @@ void raySphereIntersection(inout Ray r, vec3 spherePos, float sphereRadius)
 		if(t < 0.0 || r.currentT < t)
 			return;
 
-		vec3 intersectionPoint = r.rayPosition + r.rayDirection * t;
+		vec3 intersectionPoint = r.position + r.direction * t;
 		vec3 normal = normalize(intersectionPoint - spherePos);
 
 		r.currentT = t;
 
 		r.hit.currentNormal = normal;
 		r.hit.albedo = vec3(0.0f, 0.0f, 0.0f);
-		r.hit.emissive = vec3(1.0f, 0.9f, 0.7f) * 100.0f;
+		r.hit.emissive = vec3(1.0f, 0.9f, 0.7f) * 3.0f;
 	}
 }
 
@@ -195,27 +202,31 @@ void raySceneIntersection(inout Ray ray)
 			ray, 
 			u_blocks[i] + vec3(-0.5), 
 			u_blocks[i] + vec3(0.5),
-			i
+			vec3(0.0f, 0.0f, 0.0f)
 		);
 	}
+
+	raySphereIntersection(ray, vec3(1, 4, 0), 3.0f);
+	//rayBoxAABBIntersection(ray, vec3(1, 4, 0) + vec3(-0.5), vec3(1, 4, 0) + vec3(0.5), vec3(1.0f, 0.1f, 0.1f) * 3.0f);
 }
 
 void main()
 {
 	// Find out where we are
-	vec2 uv = gl_FragCoord.xy / vec2(LIGHTMAP_SIZE);
+	vec2 uv = gl_FragCoord.xy / vec2(u_lightmapSize);
 	vec3 currentPos = vec3(
-		fract(uv) * CHUNK_WIDTH_LENGTH, 
-		-(int(uv.y*2.0) + int(uv.x*2.0) % 2)
+		fract(uv.x*2.0) * CHUNK_WIDTH_LENGTH - 0.5f, 
+		-(int(uv.y*2.0)*2 + (int(uv.x*2.0))) + 0.5f + RAY_SHORT_OFFSET,
+		fract(uv.y*2.0) * CHUNK_WIDTH_LENGTH - 0.5f 
 	);
 
 	vec3 currentCol = vec3(0.0);//vec3(currentPos);
 	vec3 throughput = vec3(1.0f);
 
 	uint rngState = 
-		uint(uint(fragCoord.x) * uint(1973) + 
-		uint(fragCoord.y) * uint(9277) + 
-		uint(u_currentIteration) * uint(26699)) | uint(1);
+		uint(uint(gl_FragCoord.x) * uint(1973) + 
+			 uint(gl_FragCoord.y) * uint(9277) + 
+			 uint(u_currentIteration) * uint(26699)) | uint(1);
 
 	// Create ray
 	Ray ray = createRay(currentPos, normalize(vec3(0.0, 1.0, 0.0) + randomUnitVector(rngState)));
@@ -228,7 +239,7 @@ void main()
 		if(ray.currentT >= MAX_RAY_DISTANCE)
 			break;
 
-		ray.position = (ray.position + ray.direction * ray.currentT) + ray.hit.currentNormal * 0.0001f;
+		ray.position = (ray.position + ray.direction * ray.currentT) + ray.hit.currentNormal * RAY_SHORT_OFFSET;
 
 		ray.direction = normalize(ray.hit.currentNormal + randomUnitVector(rngState));
 
@@ -236,31 +247,10 @@ void main()
 		throughput *= ray.hit.albedo;
 	}
 	
+	
 
-	gl_FragColor = vec4(currentCol, 1.0);
+	vec3 lastFrameCol = texture2D(u_lastFrameTexture, uv).rgb;
+	vec3 finalCol = mix(lastFrameCol, currentCol, 1.0f / float(u_currentIteration + 1));
+
+	gl_FragColor = vec4(finalCol, 1.0);
 }
-
-
-
-
-
-// x = 0, y = 0 => index = 0
-	/*vec3 col = vec3(0.0, 0.0, 0.0);
-
-	if(uv.x > 0.5f && uv.y > 0.5f)	// x = 0.5, y = 0.5 => index = 3
-		col = vec3(1.0);
-	else if(uv.x > 0.5f)			// x = 0.5, y = 0.0 => index = 1
-		col = vec3(1.0, 0.0, 0.0);
-	else if(uv.y > 0.5f)			// x = 0.5, y = 0.5 => index = 2
-		col = vec3(0.0, 1.0, 0.0);
-
-
-	// x = 0, y = 0 => index = 0
-	vec3 col = vec3(1.0) * 0.0;
-
-	if(uv.x > 0.5f && uv.y > 0.5f)	// x = 0.5, y = 0.5 => index = 3
-		col = vec3(1.0) * 1.0;
-	else if(uv.x > 0.5f)			// x = 0.5, y = 0.0 => index = 1
-		col = vec3(1.0) * 0.33;
-	else if(uv.y > 0.5f)			// x = 0.5, y = 0.5 => index = 2
-		col = vec3(1.0) * 0.66;*/

@@ -98,12 +98,16 @@ void MinecraftPlayState::init()
     worldHandler.AddBlock(sf::Vector3i(5, 0, 6), BlockType::RedstoneBlock);
 
 
+    this->clearLightmaps();
     this->iterateOverLightmaps();
 }
 
 void MinecraftPlayState::handleInput(float dt)
 {
     inputHandler.Update(dt);
+
+    if (inputHandler.playerModifiedWorld())
+        this->clearLightmaps();
 }
 
 void MinecraftPlayState::update(float dt)
@@ -177,6 +181,8 @@ void MinecraftPlayState::update(float dt)
 
 void MinecraftPlayState::draw()
 {
+    this->iterateOverLightmaps();
+
     // Render world to texture
     renderTexture.draw(windowShaderRect, &rayTracingShader);
     renderTexture.draw(crosshairRect);
@@ -188,8 +194,21 @@ void MinecraftPlayState::draw()
     window.draw(windowShaderRect, &postProcessingShader);
 }
 
+void MinecraftPlayState::clearLightmaps()
+{
+    this->currentLightmapIteration = 0;
+
+    this->lightmapTextures[0].clear(sf::Color::Black);
+    lightmapShaderRect.setFillColor(sf::Color::Black);
+}
+
 void MinecraftPlayState::iterateOverLightmaps()
 {
+    // Reached max num of samples
+    if (this->currentLightmapIteration >= NUM_MAX_SAMPLES)
+        return;
+
+    // Collect info
     std::vector<Block*> blocksToRender = worldHandler.GetBlocksToRender();
     int numValidBlocks = SMath::min(256, blocksToRender.size());
 
@@ -200,12 +219,18 @@ void MinecraftPlayState::iterateOverLightmaps()
         blockPositions[i] = (sf::Glsl::Vec3) blocksToRender[i]->getPosition();
     }
 
-    for (int i = 0; i < 16; i++)
+    // Update shader
+    this->lightmapGeneratorShader.setUniform("u_lightmapSize", (int)LIGHTMAP_SIZE);
+    this->lightmapGeneratorShader.setUniform("u_numValidBlocks", numValidBlocks);
+    this->lightmapGeneratorShader.setUniformArray("u_blocks", blockPositions, NUM_MAX_RENDER_BLOCKS);
+
+    // Multiple iterations per frame
+    // This number should be increased if the framerate is "too high"
+    // while the lightmaps are being generated
+    for (int i = 0; i < NUM_MAX_ITERATIONS_PER_FRAME; i++)
     {
-        // Update shader
-        this->lightmapGeneratorShader.setUniform("u_numValidBlocks", numValidBlocks);
-        this->lightmapGeneratorShader.setUniformArray("u_blocks", blockPositions, NUM_MAX_RENDER_BLOCKS);
         this->lightmapGeneratorShader.setUniform("u_currentIteration", currentLightmapIteration);
+        this->lightmapGeneratorShader.setUniform("u_lastFrameTexture", lightmapTextures[0].getTexture());
 
         // Generate lightmaps
         this->lightmapTextures[0].draw(lightmapShaderRect, &lightmapGeneratorShader);

@@ -12,6 +12,7 @@ InputHandler::InputHandler()
     lastPressedMouse1 = false;
     lastPressedMouse2 = false;
     lockMouse = true;
+    hasPlayerModifiedWorld = false;
 }
 
 InputHandler::~InputHandler()
@@ -20,10 +21,10 @@ InputHandler::~InputHandler()
 
 void InputHandler::init(Player* _player, sf::Window* _window)
 {
-    player = _player;
-    window = _window;
+    this->player = _player;
+    this->window = _window;
 
-    window->setMouseCursorVisible(!lockMouse);
+    this->window->setMouseCursorVisible(!lockMouse);
 }
 
 void InputHandler::Update(const float _dt)
@@ -46,6 +47,8 @@ void InputHandler::Update(const float _dt)
         reloadedShader = false;
     }*/
 
+    this->hasPlayerModifiedWorld = false;
+
     // Lock mouse
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Tab) && !lastPressedTab)
     {
@@ -59,6 +62,8 @@ void InputHandler::Update(const float _dt)
     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right) && !lastPressedMouse2)
     {
         player->placeBlock();
+
+        this->hasPlayerModifiedWorld = true;
     }
     lastPressedMouse2 = sf::Mouse::isButtonPressed(sf::Mouse::Button::Right);
 
@@ -66,6 +71,8 @@ void InputHandler::Update(const float _dt)
     if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && !lastPressedMouse1)
     {
         player->removeBlock();
+
+        this->hasPlayerModifiedWorld = true;
     }
     lastPressedMouse1 = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
 
@@ -106,4 +113,9 @@ void InputHandler::Update(const float _dt)
         // Rotate player
         player->rotateDirection(deltaMousePosition.x, deltaMousePosition.y);
     }
+}
+
+bool InputHandler::playerModifiedWorld() const
+{
+    return this->hasPlayerModifiedWorld;
 }

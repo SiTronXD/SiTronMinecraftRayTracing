@@ -277,19 +277,21 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 	r.hit.specular = u_blockInfo[loopIndex].y;
 	r.hit.currentColor = texture2D(u_textureSheet, tempUV);
 
-	if(!normalWasVertical)
-		r.hit.currentColor = vec4(vec3(0.1f), 1.0f);
-	else
+	
+	/*if(!normalWasVertical)
+		r.hit.currentColor = vec4(vec3(0.1f), 1.0f);*/
+
+	if(normalWasVertical)
 	{
 		// 0 is top, 3 is bottom
 		float yPos = round(-worldIntersectionPoint.y + 0.5f);
 		yPos = clamp(yPos, 0.0, 3.0);
 
 		vec2 realUV = (worldIntersectionPoint.xz + vec2(0.5f)) / vec2(CHUNK_WIDTH_LENGTH);
-		vec2 uvOffset = vec2(int(yPos) % 2, floor(yPos * 0.5f) * 0.5f);
-		vec2 planeUV = fract(realUV * 2.0f) * 0.5f;
+		vec2 uvOffset = vec2(int(yPos) % 2, floor(yPos * 0.5f)) * 0.5f;
+		vec2 planeUV = realUV * 0.5f;
 
-		r.hit.currentColor = texture2D(u_lightMapUpTexture, uvOffset + planeUV);
+		r.hit.currentColor *= texture2D(u_lightMapUpTexture, uvOffset + planeUV);
 	}
 }
 
@@ -322,7 +324,7 @@ void raySphereIntersection(inout Ray r, vec3 spherePos, float sphereRadius)
 		r.currentT = t;
 		r.hit.currentNormal = normal;
 		r.hit.specular = 0.0f;
-		r.hit.currentColor = vec4(0.9, 0.0, 0.0, 1.0) * dot(normalize(vec3(1.0, 1.0, -1.0)), normal);
+		r.hit.currentColor = vec4(1.0f, 0.9f, 0.7f, 1.0);// * min(0.5, dot(normalize(vec3(1.0, 1.0, -1.0)), normal));
 	}
 }
 
@@ -337,6 +339,8 @@ void raySceneIntersection(inout Ray r, vec2 correctUV)
 			i
 		);
 	}
+
+	raySphereIntersection(r, vec3(0, 4, 0), 3.0f);
 }
 
 vec3 getSkyboxColor(vec3 rayDirection)

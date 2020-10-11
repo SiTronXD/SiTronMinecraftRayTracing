@@ -19,6 +19,7 @@ private:
 	bool lastPressedTab;
 	bool lastPressedMouse1;
 	bool lastPressedMouse2;
+	bool hasPlayerModifiedWorld;
 
 public:
 	InputHandler();
@@ -27,4 +28,6 @@ public:
 	void init(Player* _player, sf::Window* _window);
 
 	void Update(const float _dt);
+
+	bool playerModifiedWorld() const;
 };
