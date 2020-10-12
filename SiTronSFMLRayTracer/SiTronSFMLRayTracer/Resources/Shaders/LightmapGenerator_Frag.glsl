@@ -4,7 +4,7 @@
 const int NUM_MAX_BLOCKS = 256;
 const int CHUNK_WIDTH_LENGTH = 8;
 const int CHUNK_HEIGHT = 4;
-const int MAX_RAY_BOUNCES = 16;
+const int MAX_RAY_BOUNCES = 8;
 
 const float MAX_RAY_DISTANCE = 64.0;
 const float TWO_PI = 3.141592f * 2.0f;
@@ -13,7 +13,10 @@ const float RAY_SHORT_OFFSET = 0.0001f;
 // Uniforms
 uniform int u_numValidBlocks;
 uniform int u_currentIteration;
-uniform int u_lightmapSize;
+uniform int u_lightmapSideSize;
+uniform int u_lightmapNumHorizontalTiles;
+uniform int u_lightmapNumVerticalTiles;
+uniform int u_currentSide;	// 0: up/down, 1: left/right, 2: front/back
 
 uniform vec3 u_blocks[NUM_MAX_BLOCKS];
 
@@ -95,8 +98,7 @@ float squaredLength(vec3 p)
 	return dot(p, p);
 }
 
-void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner, 
-	vec3 emissive)
+void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner)
 {
 	float t1 = (minCorner.x - r.position.x) * r.oneOverDirection.x;
 	float t2 = (maxCorner.x - r.position.x) * r.oneOverDirection.x;
@@ -148,16 +150,10 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 		r.hit.currentNormal = vec3(0.0, 0.0, t == t5 ? -1.0 : 1.0);
 	}
 
-	// Transparency test
-	/*if(isTransparent(u_blockInfo[loopIndex].z, normalizedUV))
-	{
-		return;
-	}*/
-
 	r.currentT = t;
 
-	r.hit.albedo = vec3(0.0f, 0.0f, 0.0f);
-	r.hit.emissive = emissive;
+	r.hit.albedo = vec3(1.0f, 1.0f, 1.0f) * 0.8f;
+	r.hit.emissive = vec3(0.0f, 0.0f, 0.0f);
 }
 
 void raySphereIntersection(inout Ray r, vec3 spherePos, float sphereRadius)
@@ -194,6 +190,20 @@ void raySphereIntersection(inout Ray r, vec3 spherePos, float sphereRadius)
 	}
 }
 
+bool isPositionInsideBlock(vec3 p)
+{
+	for(int i = 0; i < u_numValidBlocks; i++)
+	{
+		vec3 delta = abs(p - u_blocks[i]);
+		float dist = max(delta.x, max(delta.y, delta.z));
+
+		if(dist < 0.5f)
+			return true;
+	}
+
+	return false;
+}
+
 void raySceneIntersection(inout Ray ray)
 {
 	for(int i = 0; i < u_numValidBlocks; i++)
@@ -201,24 +211,80 @@ void raySceneIntersection(inout Ray ray)
 		rayBoxAABBIntersection(
 			ray, 
 			u_blocks[i] + vec3(-0.5), 
-			u_blocks[i] + vec3(0.5),
-			vec3(0.0f, 0.0f, 0.0f)
+			u_blocks[i] + vec3(0.5)
 		);
 	}
 
 	raySphereIntersection(ray, vec3(1, 4, 0), 3.0f);
-	//rayBoxAABBIntersection(ray, vec3(1, 4, 0) + vec3(-0.5), vec3(1, 4, 0) + vec3(0.5), vec3(1.0f, 0.1f, 0.1f) * 3.0f);
 }
 
 void main()
 {
 	// Find out where we are
-	vec2 uv = gl_FragCoord.xy / vec2(u_lightmapSize);
-	vec3 currentPos = vec3(
-		fract(uv.x*2.0) * CHUNK_WIDTH_LENGTH - 0.5f, 
-		-(int(uv.y*2.0)*2 + (int(uv.x*2.0))) + 0.5f + RAY_SHORT_OFFSET,
-		fract(uv.y*2.0) * CHUNK_WIDTH_LENGTH - 0.5f 
-	);
+	vec2 uv = gl_FragCoord.xy / 
+		(vec2(u_lightmapNumHorizontalTiles, u_lightmapNumVerticalTiles) * u_lightmapSideSize);
+
+	vec3 currentPos = vec3(0.0f);
+	vec3 startNormal = vec3(0.0f);
+	if(u_currentSide == 0)
+	{
+		uv /= vec2(CHUNK_WIDTH_LENGTH);
+
+		startNormal = vec3(0.0f, 1.0f, 0.0f);
+
+		currentPos = vec3(
+			fract(uv.x * u_lightmapNumHorizontalTiles) * CHUNK_WIDTH_LENGTH - 0.5f,
+			-(int(uv.y * u_lightmapNumVerticalTiles) * u_lightmapNumHorizontalTiles + (int(uv.x * u_lightmapNumHorizontalTiles))) + 0.5f,
+			fract(uv.y * u_lightmapNumVerticalTiles) * CHUNK_WIDTH_LENGTH - 0.5f
+		);
+	}
+	else if(u_currentSide == 1)
+	{
+		uv /= vec2(CHUNK_WIDTH_LENGTH, CHUNK_HEIGHT);
+		uv.y = 1.0 - uv.y;
+
+		startNormal = vec3(-1.0f, 0.0f, 0.0f);
+
+		currentPos = vec3(
+			(int(uv.y * u_lightmapNumVerticalTiles) * u_lightmapNumHorizontalTiles + (int(uv.x * u_lightmapNumHorizontalTiles))) - 0.5f,
+			-fract(uv.y * u_lightmapNumVerticalTiles) * CHUNK_HEIGHT + 0.5f,
+			fract(uv.x * u_lightmapNumHorizontalTiles) * CHUNK_WIDTH_LENGTH - 0.5f
+		);
+		
+		uv.y = 1.0 - uv.y;
+	}
+	else if(u_currentSide == 2)
+	{
+		uv /= vec2(CHUNK_WIDTH_LENGTH, CHUNK_HEIGHT);
+		uv.y = 1.0 - uv.y;
+
+		startNormal = vec3(0.0f, 0.0f, -1.0f);
+
+		currentPos = vec3(
+			fract(uv.x * u_lightmapNumHorizontalTiles) * CHUNK_WIDTH_LENGTH - 0.5f,
+			-fract(uv.y * u_lightmapNumVerticalTiles) * CHUNK_HEIGHT + 0.5f,
+			(int(uv.y * u_lightmapNumVerticalTiles) * u_lightmapNumHorizontalTiles + (int(uv.x * u_lightmapNumHorizontalTiles))) - 0.5f
+		);
+		
+		uv.y = 1.0 - uv.y;
+	}
+
+	// Check if this point does not have a surface
+	if(!isPositionInsideBlock(currentPos + startNormal*0.5f) && !isPositionInsideBlock(currentPos - startNormal*0.5f))
+	{
+		gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);	
+
+		return;
+	}
+
+	// Check if the normal is pointing inside a block
+	if(isPositionInsideBlock(currentPos + startNormal*0.5f))
+	{
+		startNormal *= -1;
+	}
+
+	// Short offset so the position doesn't start inside a cube
+	currentPos += startNormal * RAY_SHORT_OFFSET;
 
 	vec3 currentCol = vec3(0.0);//vec3(currentPos);
 	vec3 throughput = vec3(1.0f);
@@ -229,7 +295,7 @@ void main()
 			 uint(u_currentIteration) * uint(26699)) | uint(1);
 
 	// Create ray
-	Ray ray = createRay(currentPos, normalize(vec3(0.0, 1.0, 0.0) + randomUnitVector(rngState)));
+	Ray ray = createRay(currentPos, normalize(startNormal + randomUnitVector(rngState)));
 
 	for(int bounceIndex = 0; bounceIndex < MAX_RAY_BOUNCES; bounceIndex++)
 	{
@@ -240,7 +306,6 @@ void main()
 			break;
 
 		ray.position = (ray.position + ray.direction * ray.currentT) + ray.hit.currentNormal * RAY_SHORT_OFFSET;
-
 		ray.direction = normalize(ray.hit.currentNormal + randomUnitVector(rngState));
 
 		currentCol += ray.hit.emissive * throughput;
@@ -251,6 +316,7 @@ void main()
 
 	vec3 lastFrameCol = texture2D(u_lastFrameTexture, uv).rgb;
 	vec3 finalCol = mix(lastFrameCol, currentCol, 1.0f / float(u_currentIteration + 1));
+	//finalCol = fract(currentPos+0.5f);
 
 	gl_FragColor = vec4(finalCol, 1.0);
 }

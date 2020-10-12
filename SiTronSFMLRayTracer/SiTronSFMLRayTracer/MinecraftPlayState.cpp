@@ -46,8 +46,25 @@ void MinecraftPlayState::init()
     windowShaderRect.setSize(sf::Vector2f((float)settingsHandler.GetWindowWidth(), (float)settingsHandler.GetWindowHeight()));
     windowShaderRect.setFillColor(sf::Color::Green);
 
-    // Initialize lightmap shader rect
-    lightmapShaderRect.setSize(sf::Vector2f(LIGHTMAP_SIZE, LIGHTMAP_SIZE));
+    // Initialize lightmap shader rects
+    lightmapShaderRect[0].setSize(
+        sf::Vector2f(
+            LIGHTMAP_BLOCK_SIDE_SIZE * NUM_CHUNK_WIDTH_LENGTH * LIGHTMAP_UP_HORIZONTAL_TILE_SIZE, 
+            LIGHTMAP_BLOCK_SIDE_SIZE * NUM_CHUNK_WIDTH_LENGTH * LIGHTMAP_UP_VERTICAL_TILE_SIZE
+        )
+    );
+    lightmapShaderRect[1].setSize(
+        sf::Vector2f(
+            LIGHTMAP_BLOCK_SIDE_SIZE * NUM_CHUNK_WIDTH_LENGTH * LIGHTMAP_RIGHT_HORIZONTAL_TILE_SIZE,
+            LIGHTMAP_BLOCK_SIDE_SIZE * NUM_CHUNK_HEIGHT * LIGHTMAP_RIGHT_VERTICAL_TILE_SIZE
+        )
+    );
+    lightmapShaderRect[2].setSize(
+        sf::Vector2f(
+            LIGHTMAP_BLOCK_SIDE_SIZE * NUM_CHUNK_WIDTH_LENGTH * LIGHTMAP_FRONT_HORIZONTAL_TILE_SIZE,
+            LIGHTMAP_BLOCK_SIDE_SIZE * NUM_CHUNK_HEIGHT * LIGHTMAP_FRONT_VERTICAL_TILE_SIZE
+        )
+    );
     windowShaderRect.setFillColor(sf::Color::Magenta);
 
     // Create render texture for post processing effects
@@ -55,8 +72,13 @@ void MinecraftPlayState::init()
         Log::print("Couldn't create render texture");
 
     // Create render textures for light maps
-    if(!lightmapTextures[0].create(LIGHTMAP_SIZE, LIGHTMAP_SIZE))
+    if(!lightmapTextures[0].create(LIGHTMAP_BLOCK_SIDE_SIZE * NUM_CHUNK_WIDTH_LENGTH * LIGHTMAP_UP_HORIZONTAL_TILE_SIZE, LIGHTMAP_BLOCK_SIDE_SIZE * NUM_CHUNK_WIDTH_LENGTH * LIGHTMAP_UP_VERTICAL_TILE_SIZE))
         Log::print("Couldn't create render texture for up light map");
+    if (!lightmapTextures[1].create(LIGHTMAP_BLOCK_SIDE_SIZE * NUM_CHUNK_WIDTH_LENGTH * LIGHTMAP_RIGHT_HORIZONTAL_TILE_SIZE, LIGHTMAP_BLOCK_SIDE_SIZE * NUM_CHUNK_HEIGHT * LIGHTMAP_RIGHT_VERTICAL_TILE_SIZE))
+        Log::print("Couldn't create render texture for right light map");
+    if (!lightmapTextures[2].create(LIGHTMAP_BLOCK_SIDE_SIZE * NUM_CHUNK_WIDTH_LENGTH * LIGHTMAP_FRONT_HORIZONTAL_TILE_SIZE, LIGHTMAP_BLOCK_SIDE_SIZE * NUM_CHUNK_HEIGHT * LIGHTMAP_FRONT_VERTICAL_TILE_SIZE))
+        Log::print("Couldn't create render texture for front light map");
+
 
     player.init(&worldHandler);
     inputHandler.init(&player, &window);
@@ -84,6 +106,26 @@ void MinecraftPlayState::init()
         }
     }
 
+    for (int z = 0; z < 8; z++)
+    {
+        for (int y = 0; y > -4; y--)
+        {
+            worldHandler.AddBlock(sf::Vector3i(0, y, z), BlockType::Stone);
+            worldHandler.AddBlock(sf::Vector3i(3, y, z), BlockType::Stone);
+
+            worldHandler.RemoveBlock(sf::Vector3i(1, y, z));
+            worldHandler.RemoveBlock(sf::Vector3i(2, y, z));
+
+            if (y == 0 || y == -3)
+            {
+                worldHandler.AddBlock(sf::Vector3i(1, y, z), BlockType::Stone);
+                worldHandler.AddBlock(sf::Vector3i(2, y, z), BlockType::Stone);
+            }
+        }
+    }
+    worldHandler.RemoveBlock(sf::Vector3i(1, 0, 2));
+    worldHandler.RemoveBlock(sf::Vector3i(2, 0, 2));
+
     // Redstone blocks to test god rays
     worldHandler.AddBlock(sf::Vector3i(6, -2, 7), BlockType::RedstoneBlock);
     worldHandler.AddBlock(sf::Vector3i(5, -2, 7), BlockType::RedstoneBlock);
@@ -98,6 +140,11 @@ void MinecraftPlayState::init()
     worldHandler.AddBlock(sf::Vector3i(5, 0, 6), BlockType::RedstoneBlock);
 
 
+    // Text
+    font.loadFromFile("C:/Windows/Fonts/arial.ttf");
+    text.setFont(font);
+    text.setCharacterSize(20);
+
     this->clearLightmaps();
     this->iterateOverLightmaps();
 }
@@ -106,7 +153,7 @@ void MinecraftPlayState::handleInput(float dt)
 {
     inputHandler.Update(dt);
 
-    if (inputHandler.playerModifiedWorld())
+    if (inputHandler.playerModifiedWorld() && clearLightmapAfterModification)
         this->clearLightmaps();
 }
 
@@ -173,6 +220,8 @@ void MinecraftPlayState::update(float dt)
     rayTracingShader.setUniform("u_textureSheet", textureSheet);
     rayTracingShader.setUniform("u_blueNoiseTexture", blueNoiseTexture);
     rayTracingShader.setUniform("u_lightMapUpTexture", lightmapTextures[0].getTexture());
+    rayTracingShader.setUniform("u_lightMapRightTexture", lightmapTextures[1].getTexture());
+    rayTracingShader.setUniform("u_lightMapFrontTexture", lightmapTextures[2].getTexture());
 
     // Other shader uniforms
     rayTracingShader.setUniform("u_resolution", sf::Glsl::Vec2((float)settingsHandler.GetWindowWidth(), (float)settingsHandler.GetWindowHeight()));
@@ -192,6 +241,19 @@ void MinecraftPlayState::draw()
     postProcessingShader.setUniform("u_mainTexture", renderTexture.getTexture());
     postProcessingShader.setUniform("u_resolution", sf::Glsl::Vec2((float)settingsHandler.GetWindowWidth(), (float)settingsHandler.GetWindowHeight()));
     window.draw(windowShaderRect, &postProcessingShader);
+
+
+    // Render lightmaps calculated text
+    float percent = (float)this->currentLightmapIteration / NUM_MAX_SAMPLES * 100;
+    text.setString("Calculating lightmaps: " + 
+        std::to_string(percent) + "%");
+
+    if (percent >= 100.0f)
+        text.setFillColor(sf::Color::Green);
+    else
+        text.setFillColor(sf::Color::Red);
+
+    window.draw(text);
 }
 
 void MinecraftPlayState::clearLightmaps()
@@ -199,7 +261,9 @@ void MinecraftPlayState::clearLightmaps()
     this->currentLightmapIteration = 0;
 
     this->lightmapTextures[0].clear(sf::Color::Black);
-    lightmapShaderRect.setFillColor(sf::Color::Black);
+    this->lightmapTextures[1].clear(sf::Color::Black);
+    this->lightmapTextures[2].clear(sf::Color::Black);
+    this->lightmapShaderRect[0].setFillColor(sf::Color::Black);
 }
 
 void MinecraftPlayState::iterateOverLightmaps()
@@ -220,21 +284,49 @@ void MinecraftPlayState::iterateOverLightmaps()
     }
 
     // Update shader
-    this->lightmapGeneratorShader.setUniform("u_lightmapSize", (int)LIGHTMAP_SIZE);
+    this->lightmapGeneratorShader.setUniform("u_lightmapSideSize", (int)this->LIGHTMAP_BLOCK_SIDE_SIZE);
     this->lightmapGeneratorShader.setUniform("u_numValidBlocks", numValidBlocks);
-    this->lightmapGeneratorShader.setUniformArray("u_blocks", blockPositions, NUM_MAX_RENDER_BLOCKS);
+    this->lightmapGeneratorShader.setUniformArray("u_blocks", blockPositions, this->NUM_MAX_RENDER_BLOCKS);
 
     // Multiple iterations per frame
-    // This number should be increased if the framerate is "too high"
+    // This number should be increased if the framerate is capped and "too high"
     // while the lightmaps are being generated
     for (int i = 0; i < NUM_MAX_ITERATIONS_PER_FRAME; i++)
     {
-        this->lightmapGeneratorShader.setUniform("u_currentIteration", currentLightmapIteration);
-        this->lightmapGeneratorShader.setUniform("u_lastFrameTexture", lightmapTextures[0].getTexture());
+        this->lightmapGeneratorShader.setUniform("u_currentIteration", (int) this->currentLightmapIteration);
+
+        // ---Up sides---
+        this->lightmapGeneratorShader.setUniform("u_currentSide", 0);
+        this->lightmapGeneratorShader.setUniform("u_lightmapNumHorizontalTiles", (int)this->LIGHTMAP_UP_HORIZONTAL_TILE_SIZE);
+        this->lightmapGeneratorShader.setUniform("u_lightmapNumVerticalTiles", (int)this->LIGHTMAP_UP_VERTICAL_TILE_SIZE);
+        this->lightmapGeneratorShader.setUniform("u_lastFrameTexture", this->lightmapTextures[0].getTexture());
 
         // Generate lightmaps
-        this->lightmapTextures[0].draw(lightmapShaderRect, &lightmapGeneratorShader);
+        this->lightmapTextures[0].draw(this->lightmapShaderRect[0], &this->lightmapGeneratorShader);
         this->lightmapTextures[0].display();
+
+
+        // ---Right sides---
+        this->lightmapGeneratorShader.setUniform("u_currentSide", 1);
+        this->lightmapGeneratorShader.setUniform("u_lightmapNumHorizontalTiles", (int)this->LIGHTMAP_RIGHT_HORIZONTAL_TILE_SIZE);
+        this->lightmapGeneratorShader.setUniform("u_lightmapNumVerticalTiles", (int)this->LIGHTMAP_RIGHT_VERTICAL_TILE_SIZE);
+        this->lightmapGeneratorShader.setUniform("u_lastFrameTexture", this->lightmapTextures[1].getTexture());
+
+        // Generate lightmaps
+        this->lightmapTextures[1].draw(this->lightmapShaderRect[1], &this->lightmapGeneratorShader);
+        this->lightmapTextures[1].display();
+
+
+        // ---Front sides---
+        this->lightmapGeneratorShader.setUniform("u_currentSide", 2);
+        this->lightmapGeneratorShader.setUniform("u_lightmapNumHorizontalTiles", (int)this->LIGHTMAP_FRONT_HORIZONTAL_TILE_SIZE);
+        this->lightmapGeneratorShader.setUniform("u_lightmapNumVerticalTiles", (int)this->LIGHTMAP_FRONT_VERTICAL_TILE_SIZE);
+        this->lightmapGeneratorShader.setUniform("u_lastFrameTexture", this->lightmapTextures[2].getTexture());
+
+        // Generate lightmaps
+        this->lightmapTextures[2].draw(this->lightmapShaderRect[2], &this->lightmapGeneratorShader);
+        this->lightmapTextures[2].display();
+
 
         this->currentLightmapIteration++;
     }

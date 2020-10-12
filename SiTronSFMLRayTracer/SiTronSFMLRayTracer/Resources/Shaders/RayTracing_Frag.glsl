@@ -15,6 +15,14 @@ const int NUM_MAX_RAY_BOUNCES = 8;
 const int NUM_MAX_BLOCKS = 256;
 const int NUM_MAX_TEXTURERECTS = 12;
 const int CHUNK_WIDTH_LENGTH = 8;
+const int CHUNK_HEIGHT = 4;
+
+const int LIGHTMAP_UP_HORIZONTAL_TILE_SIZE = 2;
+const int LIGHTMAP_UP_VERTICAL_TILE_SIZE = 2;
+const int LIGHTMAP_RIGHT_HORIZONTAL_TILE_SIZE = 4;
+const int LIGHTMAP_RIGHT_VERTICAL_TILE_SIZE = 2;
+const int LIGHTMAP_FRONT_HORIZONTAL_TILE_SIZE = 4;
+const int LIGHTMAP_FRONT_VERTICAL_TILE_SIZE = 2;
 
 const vec3 LIGHT_DIR = normalize(vec3(-1.0));
 const int NUM_FOG_SAMPLES = 8;
@@ -57,6 +65,8 @@ uniform vec4 u_blockTextureRect[NUM_MAX_TEXTURERECTS];
 uniform sampler2D u_textureSheet;
 uniform sampler2D u_blueNoiseTexture;
 uniform sampler2D u_lightMapUpTexture;
+uniform sampler2D u_lightMapRightTexture;
+uniform sampler2D u_lightMapFrontTexture;
 
 // Non-uniforms
 vec2 oneOverTextureSize = vec2(1.0) / textureSize(u_textureSheet, 0).xy;
@@ -213,9 +223,9 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 	int blockIndex = int(u_blockInfo[loopIndex].x);
 	int textureIndexOffset = 3 * blockIndex;
 
-	bool normalWasVertical = false;
+	int side = -1;
 
-	// Horizontal sides
+	// Right/left sides
 	if(t == t1 || t == t2)
 	{
 		normalizedUV = vec2(intersectionPoint.z, intersectionPoint.y);
@@ -226,8 +236,10 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 		);
 
 		r.hit.currentNormal = vec3(t == t1 ? -1.0 : 1.0, 0.0, 0.0);
+
+		side = 1;
 	}
-	// Top or bottom
+	// Top/bottom sides
 	else if(t == t3 || t == t4)
 	{
 		normalizedUV = vec2(intersectionPoint.x, intersectionPoint.z);
@@ -251,9 +263,9 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 			r.hit.currentNormal = vec3(0.0, -1.0, 0.0);
 		}
 
-		normalWasVertical = true;
+		side = 0;
 	}
-	// Other sides
+	// Front/back sides
 	else if(t == t5 || t == t6)
 	{
 		normalizedUV = vec2(intersectionPoint.x, intersectionPoint.y);
@@ -264,6 +276,8 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 		);
 		
 		r.hit.currentNormal = vec3(0.0, 0.0, t == t5 ? -1.0 : 1.0);
+
+		side = 2;
 	}
 
 	// Transparency test
@@ -278,21 +292,48 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 	r.hit.currentColor = texture2D(u_textureSheet, tempUV);
 
 	
-	/*if(!normalWasVertical)
-		r.hit.currentColor = vec4(vec3(0.1f), 1.0f);*/
-
-	if(normalWasVertical)
+	if(side == 0)	// Top/bottom
 	{
 		// 0 is top, 3 is bottom
 		float yPos = round(-worldIntersectionPoint.y + 0.5f);
-		yPos = clamp(yPos, 0.0, 3.0);
+		float chunkMask = yPos >= 0.0 && yPos <= 3.0f ? 1.0f : 0.0f;
 
 		vec2 realUV = (worldIntersectionPoint.xz + vec2(0.5f)) / vec2(CHUNK_WIDTH_LENGTH);
 		vec2 uvOffset = vec2(int(yPos) % 2, floor(yPos * 0.5f)) * 0.5f;
 		vec2 planeUV = realUV * 0.5f;
 
-		r.hit.currentColor *= texture2D(u_lightMapUpTexture, uvOffset + planeUV);
+		r.hit.currentColor = texture2D(u_lightMapUpTexture, uvOffset + planeUV) * chunkMask;
 	}
+	else if(side == 1)	// Right/left
+	{
+		// 0 to 7
+		float xPos = round(worldIntersectionPoint.x + 0.5f);
+		float chunkMask = xPos >= 0.0f && xPos <= 7.0f ? 1.0f : 0.0f;
+
+		vec2 oneOverSize = 1.0 / vec2(LIGHTMAP_RIGHT_HORIZONTAL_TILE_SIZE, LIGHTMAP_RIGHT_VERTICAL_TILE_SIZE);
+
+		vec2 realUV = (worldIntersectionPoint.zy + vec2(0.5f, -0.5f)) / vec2(CHUNK_WIDTH_LENGTH, -CHUNK_HEIGHT);
+		vec2 uvOffset = vec2(int(xPos) % LIGHTMAP_RIGHT_HORIZONTAL_TILE_SIZE, floor(xPos / LIGHTMAP_RIGHT_HORIZONTAL_TILE_SIZE)) * oneOverSize;
+		vec2 planeUV = realUV * oneOverSize;
+
+		r.hit.currentColor = texture2D(u_lightMapRightTexture, vec2(uvOffset.x + planeUV.x, 1.0 - (uvOffset.y + planeUV.y))) * chunkMask;
+	}
+	else if(side == 2)	// Front/back
+	{
+		// 0 to 7
+		float zPos = round(worldIntersectionPoint.z + 0.5f);
+		float chunkMask = zPos >= 0.0f && zPos <= 7.0f ? 1.0f : 0.0f;
+
+		vec2 oneOverSize = 1.0 / vec2(LIGHTMAP_FRONT_HORIZONTAL_TILE_SIZE, LIGHTMAP_FRONT_VERTICAL_TILE_SIZE);
+
+		vec2 realUV = (worldIntersectionPoint.xy + vec2(0.5f, -0.5f)) / vec2(CHUNK_WIDTH_LENGTH, -CHUNK_HEIGHT);
+		vec2 uvOffset = vec2(int(zPos) % LIGHTMAP_FRONT_HORIZONTAL_TILE_SIZE, floor(zPos / LIGHTMAP_FRONT_HORIZONTAL_TILE_SIZE)) * oneOverSize;
+		vec2 planeUV = realUV * oneOverSize;
+
+		r.hit.currentColor = texture2D(u_lightMapFrontTexture, vec2(uvOffset.x + planeUV.x, 1.0 - (uvOffset.y + planeUV.y))) * chunkMask;
+	}
+	else
+		r.hit.currentColor = vec4(vec3(0.1f), 1.0f);
 }
 
 void raySphereIntersection(inout Ray r, vec3 spherePos, float sphereRadius)
@@ -444,9 +485,9 @@ void main()
 		vec2(u_resolution.x / u_resolution.y, 1.0));
 
 	// Debug u_lightMapUpTexture
-	if(correctUV.x < 0.2 && correctUV.y < 0.2 && uv.x < 0.0)
+	if(correctUV.x < 0.8 && correctUV.y < 0.2 && uv.x < 0.0)
 	{
-		gl_FragColor = vec4(texture2D(u_lightMapUpTexture, correctUV/vec2(0.2)).rgb, 1.0);
+		gl_FragColor = vec4(texture2D(u_lightMapRightTexture, correctUV/vec2(0.8, 0.2)).rgb, 1.0);
 
 		return;
 	}
