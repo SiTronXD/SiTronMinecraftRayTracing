@@ -10,6 +10,8 @@ const float MAX_RAY_DISTANCE = 64.0;
 const float TWO_PI = 3.141592f * 2.0f;
 const float RAY_SHORT_OFFSET = 0.0001f;
 
+const vec3 IGNORE_COLOR = vec3(0.0f, 0.0f, 0.0f);
+
 // Uniforms
 uniform int u_numValidBlocks;
 uniform int u_currentIteration;
@@ -272,7 +274,7 @@ void main()
 	// Check if this point does not have a surface
 	if(!isPositionInsideBlock(currentPos + startNormal*0.5f) && !isPositionInsideBlock(currentPos - startNormal*0.5f))
 	{
-		gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);	
+		gl_FragColor = vec4(IGNORE_COLOR, 1.0);	
 
 		return;
 	}
@@ -291,8 +293,8 @@ void main()
 
 	uint rngState = 
 		uint(uint(gl_FragCoord.x) * uint(1973) + 
-			 uint(gl_FragCoord.y) * uint(9277) + 
-			 uint(u_currentIteration) * uint(26699)) | uint(1);
+				uint(gl_FragCoord.y) * uint(9277) + 
+				uint(u_currentIteration) * uint(26699)) | uint(1);
 
 	// Create ray
 	Ray ray = createRay(currentPos, normalize(startNormal + randomUnitVector(rngState)));
@@ -316,7 +318,6 @@ void main()
 
 	vec3 lastFrameCol = texture2D(u_lastFrameTexture, uv).rgb;
 	vec3 finalCol = mix(lastFrameCol, currentCol, 1.0f / float(u_currentIteration + 1));
-	//finalCol = fract(currentPos+0.5f);
 
 	gl_FragColor = vec4(finalCol, 1.0);
 }

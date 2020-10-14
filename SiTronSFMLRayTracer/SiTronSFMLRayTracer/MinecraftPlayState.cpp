@@ -24,17 +24,22 @@ void MinecraftPlayState::init()
     Loader::loadShader(
         "Resources/Shaders/RayTracing_Vert.glsl", 
         "Resources/Shaders/Raytracing_Frag.glsl",
-        rayTracingShader
+        this->rayTracingShader
     );
     Loader::loadShader(
         "Resources/Shaders/LightmapGenerator_Vert.glsl",
         "Resources/Shaders/LightmapGenerator_Frag.glsl",
-        lightmapGeneratorShader
+        this->lightmapGeneratorShader
     );
     Loader::loadShader(
         "Resources/Shaders/PostProcessingEffect_Vert.glsl",
         "Resources/Shaders/PostProcessingEffect_Frag.glsl",
-        postProcessingShader
+        this->postProcessingShader
+    );
+    Loader::loadShader(
+        "Resources/Shaders/Denoiser_Vert.glsl",
+        "Resources/Shaders/Denoiser_Frag.glsl",
+        this->lightmapDenoiserShader
     );
 
     // Load textures
@@ -329,5 +334,45 @@ void MinecraftPlayState::iterateOverLightmaps()
 
 
         this->currentLightmapIteration++;
+    }
+
+    // The last sample has been reached
+    if (this->currentLightmapIteration >= NUM_MAX_SAMPLES)
+    {
+        // Find current size
+        for (int i = 0; i < 3; i++)
+        {
+            int lm_width = 0;
+            int lm_height = 0;
+
+            switch (i)
+            {
+            case 0:
+                lm_width = LIGHTMAP_UP_HORIZONTAL_TILE_SIZE * NUM_CHUNK_WIDTH_LENGTH;
+                lm_height =LIGHTMAP_UP_VERTICAL_TILE_SIZE * NUM_CHUNK_WIDTH_LENGTH;
+                break;
+            case 1:
+                lm_width = LIGHTMAP_RIGHT_HORIZONTAL_TILE_SIZE * NUM_CHUNK_WIDTH_LENGTH;
+                lm_height = LIGHTMAP_RIGHT_VERTICAL_TILE_SIZE * NUM_CHUNK_HEIGHT;
+                break;
+            case 2:
+                lm_width = LIGHTMAP_FRONT_HORIZONTAL_TILE_SIZE * NUM_CHUNK_WIDTH_LENGTH;
+                lm_height = LIGHTMAP_FRONT_VERTICAL_TILE_SIZE * NUM_CHUNK_HEIGHT;
+                break;
+            }
+
+            lm_width *= LIGHTMAP_BLOCK_SIDE_SIZE;
+            lm_height *= LIGHTMAP_BLOCK_SIDE_SIZE;
+
+            Log::print("lm_width: " + std::to_string(lm_width) + "   lm_height: " + std::to_string(lm_height));
+
+            // Set uniforms
+            this->lightmapDenoiserShader.setUniform("u_lightmapSize", sf::Glsl::Vec2(lm_width, lm_height));
+            this->lightmapDenoiserShader.setUniform("u_lightmapTexture", this->lightmapTextures[i].getTexture());
+
+            // Render
+            this->lightmapTextures[i].draw(this->lightmapShaderRect[i], &this->lightmapDenoiserShader);
+            this->lightmapTextures[i].display();
+        }
     }
 }

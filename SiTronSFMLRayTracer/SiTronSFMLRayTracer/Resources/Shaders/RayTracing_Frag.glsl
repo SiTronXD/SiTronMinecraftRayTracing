@@ -297,10 +297,12 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 		// 0 is top, 3 is bottom
 		float yPos = round(-worldIntersectionPoint.y + 0.5f);
 		float chunkMask = yPos >= 0.0 && yPos <= 3.0f ? 1.0f : 0.0f;
+		
+		vec2 oneOverSize = 1.0 / vec2(LIGHTMAP_UP_HORIZONTAL_TILE_SIZE, LIGHTMAP_UP_VERTICAL_TILE_SIZE);
 
 		vec2 realUV = (worldIntersectionPoint.xz + vec2(0.5f)) / vec2(CHUNK_WIDTH_LENGTH);
-		vec2 uvOffset = vec2(int(yPos) % 2, floor(yPos * 0.5f)) * 0.5f;
-		vec2 planeUV = realUV * 0.5f;
+		vec2 uvOffset = vec2(int(yPos) % LIGHTMAP_UP_HORIZONTAL_TILE_SIZE, floor(yPos * oneOverSize.x)) * oneOverSize;
+		vec2 planeUV = realUV * oneOverSize;
 
 		r.hit.currentColor = texture2D(u_lightMapUpTexture, uvOffset + planeUV) * chunkMask;
 	}
@@ -313,7 +315,7 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 		vec2 oneOverSize = 1.0 / vec2(LIGHTMAP_RIGHT_HORIZONTAL_TILE_SIZE, LIGHTMAP_RIGHT_VERTICAL_TILE_SIZE);
 
 		vec2 realUV = (worldIntersectionPoint.zy + vec2(0.5f, -0.5f)) / vec2(CHUNK_WIDTH_LENGTH, -CHUNK_HEIGHT);
-		vec2 uvOffset = vec2(int(xPos) % LIGHTMAP_RIGHT_HORIZONTAL_TILE_SIZE, floor(xPos / LIGHTMAP_RIGHT_HORIZONTAL_TILE_SIZE)) * oneOverSize;
+		vec2 uvOffset = vec2(int(xPos) % LIGHTMAP_RIGHT_HORIZONTAL_TILE_SIZE, floor(xPos * oneOverSize.x)) * oneOverSize;
 		vec2 planeUV = realUV * oneOverSize;
 
 		r.hit.currentColor = texture2D(u_lightMapRightTexture, vec2(uvOffset.x + planeUV.x, 1.0 - (uvOffset.y + planeUV.y))) * chunkMask;
@@ -327,7 +329,7 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 		vec2 oneOverSize = 1.0 / vec2(LIGHTMAP_FRONT_HORIZONTAL_TILE_SIZE, LIGHTMAP_FRONT_VERTICAL_TILE_SIZE);
 
 		vec2 realUV = (worldIntersectionPoint.xy + vec2(0.5f, -0.5f)) / vec2(CHUNK_WIDTH_LENGTH, -CHUNK_HEIGHT);
-		vec2 uvOffset = vec2(int(zPos) % LIGHTMAP_FRONT_HORIZONTAL_TILE_SIZE, floor(zPos / LIGHTMAP_FRONT_HORIZONTAL_TILE_SIZE)) * oneOverSize;
+		vec2 uvOffset = vec2(int(zPos) % LIGHTMAP_FRONT_HORIZONTAL_TILE_SIZE, floor(zPos * oneOverSize.x)) * oneOverSize;
 		vec2 planeUV = realUV * oneOverSize;
 
 		r.hit.currentColor = texture2D(u_lightMapFrontTexture, vec2(uvOffset.x + planeUV.x, 1.0 - (uvOffset.y + planeUV.y))) * chunkMask;

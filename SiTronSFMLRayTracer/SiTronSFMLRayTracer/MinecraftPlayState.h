@@ -16,7 +16,7 @@ private:
 	static const uint32_t NUM_CHUNK_HEIGHT = 4;
 
 	static const uint32_t LIGHTMAP_BLOCK_SIDE_SIZE = 32;
-	static const uint32_t NUM_MAX_SAMPLES = 512*4;
+	static const uint32_t NUM_MAX_SAMPLES = 1024;
 	static const uint32_t NUM_MAX_ITERATIONS_PER_FRAME = 1;
 
 	static const uint8_t LIGHTMAP_UP_HORIZONTAL_TILE_SIZE = 2;
@@ -28,6 +28,7 @@ private:
 
 	sf::Shader rayTracingShader;
 	sf::Shader lightmapGeneratorShader;
+	sf::Shader lightmapDenoiserShader;
 	sf::Shader postProcessingShader;
 
 	sf::Texture textureSheet;
@@ -50,7 +51,7 @@ private:
 
 	uint32_t currentLightmapIteration = 0;
 
-	bool clearLightmapAfterModification = true;
+	bool clearLightmapAfterModification = false;
 
 	sf::Font font;
 	sf::Text text;

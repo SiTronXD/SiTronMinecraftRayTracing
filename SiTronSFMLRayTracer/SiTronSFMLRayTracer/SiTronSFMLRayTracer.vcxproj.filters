@@ -83,6 +83,12 @@
     <None Include="Resources\Shaders\LightmapGenerator_Vert.glsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Resources\Shaders\Denoiser_Frag.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Resources\Shaders\Denoiser_Vert.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="InputHandler.h">
