@@ -304,7 +304,8 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 		vec2 uvOffset = vec2(int(yPos) % LIGHTMAP_UP_HORIZONTAL_TILE_SIZE, floor(yPos * oneOverSize.x)) * oneOverSize;
 		vec2 planeUV = realUV * oneOverSize;
 
-		r.hit.currentColor = texture2D(u_lightMapUpTexture, uvOffset + planeUV) * chunkMask;
+		vec4 lightCol = texture2D(u_lightMapUpTexture, uvOffset + planeUV) * chunkMask;
+		r.hit.currentColor = vec4(lightCol.rgb, 1.0);
 	}
 	else if(side == 1)	// Right/left
 	{
@@ -318,7 +319,8 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 		vec2 uvOffset = vec2(int(xPos) % LIGHTMAP_RIGHT_HORIZONTAL_TILE_SIZE, floor(xPos * oneOverSize.x)) * oneOverSize;
 		vec2 planeUV = realUV * oneOverSize;
 
-		r.hit.currentColor = texture2D(u_lightMapRightTexture, vec2(uvOffset.x + planeUV.x, 1.0 - (uvOffset.y + planeUV.y))) * chunkMask;
+		vec4 lightCol = texture2D(u_lightMapRightTexture, vec2(uvOffset.x + planeUV.x, 1.0 - (uvOffset.y + planeUV.y))) * chunkMask;
+		r.hit.currentColor = vec4(lightCol.rgb, 1.0);
 	}
 	else if(side == 2)	// Front/back
 	{
@@ -332,7 +334,8 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 		vec2 uvOffset = vec2(int(zPos) % LIGHTMAP_FRONT_HORIZONTAL_TILE_SIZE, floor(zPos * oneOverSize.x)) * oneOverSize;
 		vec2 planeUV = realUV * oneOverSize;
 
-		r.hit.currentColor = texture2D(u_lightMapFrontTexture, vec2(uvOffset.x + planeUV.x, 1.0 - (uvOffset.y + planeUV.y))) * chunkMask;
+		vec4 lightCol = texture2D(u_lightMapFrontTexture, vec2(uvOffset.x + planeUV.x, 1.0 - (uvOffset.y + planeUV.y))) * chunkMask;
+		r.hit.currentColor = vec4(lightCol.rgb, 1.0);
 	}
 	else
 		r.hit.currentColor = vec4(vec3(0.1f), 1.0f);
@@ -489,7 +492,7 @@ void main()
 	// Debug u_lightMapUpTexture
 	if(correctUV.x < 0.8 && correctUV.y < 0.2 && uv.x < 0.0)
 	{
-		gl_FragColor = vec4(texture2D(u_lightMapRightTexture, correctUV/vec2(0.8, 0.2)).rgb, 1.0);
+		gl_FragColor = vec4(texture2D(u_lightMapFrontTexture, correctUV/vec2(0.8, 0.2)).rgb, 1.0);
 
 		return;
 	}

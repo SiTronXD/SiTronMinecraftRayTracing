@@ -10,7 +10,7 @@ const float MAX_RAY_DISTANCE = 64.0;
 const float TWO_PI = 3.141592f * 2.0f;
 const float RAY_SHORT_OFFSET = 0.0001f;
 
-const vec3 IGNORE_COLOR = vec3(0.0f, 0.0f, 0.0f);
+const vec3 IGNORE_COLOR = vec3(1.0f, 0.0f, 1.0f);
 
 // Uniforms
 uniform int u_numValidBlocks;
@@ -272,9 +272,9 @@ void main()
 	}
 
 	// Check if this point does not have a surface
-	if(!isPositionInsideBlock(currentPos + startNormal*0.5f) && !isPositionInsideBlock(currentPos - startNormal*0.5f))
+	if(isPositionInsideBlock(currentPos + startNormal*0.5f) == isPositionInsideBlock(currentPos - startNormal*0.5f))
 	{
-		gl_FragColor = vec4(IGNORE_COLOR, 1.0);	
+		gl_FragColor = vec4(IGNORE_COLOR, 0.0);	
 
 		return;
 	}
@@ -315,9 +315,18 @@ void main()
 	}
 	
 	
-
+	// Blend between last frame and current frame
 	vec3 lastFrameCol = texture2D(u_lastFrameTexture, uv).rgb;
 	vec3 finalCol = mix(lastFrameCol, currentCol, 1.0f / float(u_currentIteration + 1));
 
-	gl_FragColor = vec4(finalCol, 1.0);
+	// "Store" normal in alpha channel
+	float storeNormal = 
+		(startNormal.x + 
+		startNormal.y + 
+		startNormal.z) > 0.0 ? 0.75f : 0.25f;
+
+	gl_FragColor = vec4(finalCol, storeNormal);
+	
+	// normal = 0: no surface, normal = 0.25: negative, normal = 0.75: positive
+	// gl_FragColor = vec4(color of pixel, normal);
 }
