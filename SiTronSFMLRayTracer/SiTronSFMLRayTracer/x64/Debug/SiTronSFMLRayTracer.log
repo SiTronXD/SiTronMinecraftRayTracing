@@ -14,32 +14,32 @@ D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRay
           ]
 D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\MinecraftPlayState.cpp(280,61): warning C4244: 'argument': conversion from 'unsigned __int64' to 'const float', possible loss of data
 D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\MinecraftPlayState.cpp(280,24): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\MinecraftPlayState.cpp(391,112): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\MinecraftPlayState.cpp(392,112): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
           with
           [
               T=float
           ]
-D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\MinecraftPlayState.cpp(391,94): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\MinecraftPlayState.cpp(392,94): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
           with
           [
               T=float
           ]
-D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\MinecraftPlayState.cpp(392,107): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\MinecraftPlayState.cpp(393,107): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
           with
           [
               T=float
           ]
-D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\MinecraftPlayState.cpp(392,90): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\MinecraftPlayState.cpp(393,90): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
           with
           [
               T=float
           ]
-D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\MinecraftPlayState.cpp(393,95): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\MinecraftPlayState.cpp(394,95): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
           with
           [
               T=float
           ]
-D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\MinecraftPlayState.cpp(393,86): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
+D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\MinecraftPlayState.cpp(394,86): warning C4244: 'argument': conversion from 'int' to 'T', possible loss of data
           with
           [
               T=float

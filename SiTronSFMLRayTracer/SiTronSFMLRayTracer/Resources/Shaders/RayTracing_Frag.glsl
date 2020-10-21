@@ -8,6 +8,9 @@
 // Enable/disable god rays
 #define GOD_RAYS_ENABLED 0
 
+// Show only lightmaps
+#define SHOW_ONLY_LIGHTMAPS 0
+
 
 
 // Constants
@@ -305,7 +308,13 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 		vec2 planeUV = realUV * oneOverSize;
 
 		vec4 lightCol = texture2D(u_lightMapUpTexture, uvOffset + planeUV) * chunkMask;
-		r.hit.currentColor = vec4(lightCol.rgb, 1.0);
+		vec4 finalCol = vec4(lightCol.rgb, 1.0);
+		
+		#if (SHOW_ONLY_LIGHTMAPS == 0)
+			finalCol *= r.hit.currentColor;
+		#endif
+
+		r.hit.currentColor = finalCol;
 	}
 	else if(side == 1)	// Right/left
 	{
@@ -320,7 +329,13 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 		vec2 planeUV = realUV * oneOverSize;
 
 		vec4 lightCol = texture2D(u_lightMapRightTexture, vec2(uvOffset.x + planeUV.x, 1.0 - (uvOffset.y + planeUV.y))) * chunkMask;
-		r.hit.currentColor = vec4(lightCol.rgb, 1.0);
+		vec4 finalCol = vec4(lightCol.rgb, 1.0);
+		
+		#if (SHOW_ONLY_LIGHTMAPS == 0)
+			finalCol *= r.hit.currentColor;
+		#endif
+		
+		r.hit.currentColor = finalCol;
 	}
 	else if(side == 2)	// Front/back
 	{
@@ -335,7 +350,13 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 		vec2 planeUV = realUV * oneOverSize;
 
 		vec4 lightCol = texture2D(u_lightMapFrontTexture, vec2(uvOffset.x + planeUV.x, 1.0 - (uvOffset.y + planeUV.y))) * chunkMask;
-		r.hit.currentColor = vec4(lightCol.rgb, 1.0);
+		vec4 finalCol = vec4(lightCol.rgb, 1.0);
+		
+		#if (SHOW_ONLY_LIGHTMAPS == 0)
+			finalCol *= r.hit.currentColor;
+		#endif
+		
+		r.hit.currentColor = finalCol;
 	}
 	else
 		r.hit.currentColor = vec4(vec3(0.1f), 1.0f);

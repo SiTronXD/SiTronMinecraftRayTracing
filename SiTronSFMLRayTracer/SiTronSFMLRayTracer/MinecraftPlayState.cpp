@@ -388,6 +388,7 @@ void MinecraftPlayState::iterateOverLightmaps()
             lmHeight *= LIGHTMAP_BLOCK_SIDE_SIZE;
 
             // Set uniforms
+            this->lightmapDenoiserShader.setUniform("u_shouldBlur", false);
             this->lightmapDenoiserShader.setUniform("u_lightmapNumChunkSize", sf::Glsl::Vec2(lmChunkSizeWidth, lmChunkSizeHeight));
             this->lightmapDenoiserShader.setUniform("u_lightmapNumTiles", sf::Glsl::Vec2(lmNumTilesWidth, lmNumTilesHeight));
             this->lightmapDenoiserShader.setUniform("u_lightmapSize", sf::Glsl::Vec2(lmWidth, lmHeight));
