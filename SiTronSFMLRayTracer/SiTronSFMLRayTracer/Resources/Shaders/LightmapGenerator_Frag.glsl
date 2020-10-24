@@ -21,6 +21,9 @@ uniform int u_lightmapNumVerticalTiles;
 uniform int u_currentSide;	// 0: up/down, 1: left/right, 2: front/back
 
 uniform vec3 u_blocks[NUM_MAX_BLOCKS];
+uniform vec3 u_sunColor;
+
+uniform vec4 u_sunSpherePosRadius;
 
 uniform sampler2D u_lastFrameTexture;
 
@@ -188,7 +191,7 @@ void raySphereIntersection(inout Ray r, vec3 spherePos, float sphereRadius)
 
 		r.hit.currentNormal = normal;
 		r.hit.albedo = vec3(0.0f, 0.0f, 0.0f);
-		r.hit.emissive = vec3(1.0f, 0.9f, 0.7f) * 3.0f;
+		r.hit.emissive = u_sunColor;
 	}
 }
 
@@ -217,7 +220,7 @@ void raySceneIntersection(inout Ray ray)
 		);
 	}
 
-	raySphereIntersection(ray, vec3(1, 4, 0), 3.0f);
+	raySphereIntersection(ray, u_sunSpherePosRadius.xyz, u_sunSpherePosRadius.w);
 }
 
 void main()

@@ -11,13 +11,13 @@
 class MinecraftPlayState : public Gamestate
 {
 private:
-	static const uint32_t NUM_MAX_RENDER_BLOCKS = 256;
-	static const uint32_t NUM_CHUNK_WIDTH_LENGTH = 8;
-	static const uint32_t NUM_CHUNK_HEIGHT = 4;
+	static const uint16_t NUM_MAX_RENDER_BLOCKS = 256;
+	static const uint16_t NUM_CHUNK_WIDTH_LENGTH = 8;
+	static const uint16_t NUM_CHUNK_HEIGHT = 4;
 
-	static const uint32_t LIGHTMAP_BLOCK_SIDE_SIZE = 32;
-	static const uint32_t NUM_MAX_SAMPLES = 1024;
-	static const uint32_t NUM_MAX_ITERATIONS_PER_FRAME = 1;
+	static const uint16_t LIGHTMAP_BLOCK_SIDE_SIZE = 32;
+	static const uint16_t NUM_MAX_SAMPLES = 1024;
+	static const uint16_t NUM_MAX_ITERATIONS_PER_FRAME = 1;
 
 	static const uint8_t LIGHTMAP_UP_HORIZONTAL_TILE_SIZE = 2;
 	static const uint8_t LIGHTMAP_UP_VERTICAL_TILE_SIZE = 2;
@@ -35,26 +35,32 @@ private:
 	sf::Texture blueNoiseTexture;
 	sf::Texture crosshairTexture;
 
-	sf::RenderTexture renderTexture;
+	sf::RenderTexture screenRenderTexture;
 	sf::RenderTexture lightmapTextures[3];
 
 	sf::RectangleShape windowShaderRect; 
 	sf::RectangleShape lightmapShaderRect[3];
 	sf::RectangleShape crosshairRect;
 
+	sf::Font font;
+	sf::Text text;
+
 	SettingsHandler settingsHandler;
 	WorldHandler worldHandler;
 	InputHandler inputHandler;
-	Player player;
-
-	float timer = 0.0f;
+	Player* player;
 
 	uint32_t currentLightmapIteration = 0;
 
-	bool clearLightmapAfterModification = false;
+	sf::Vector3f sunPos;
+	sf::Vector3f sunColor;
 
-	sf::Font font;
-	sf::Text text;
+	float sunRadius;
+	float sunColorIntensity;
+
+	float timer = 0.0f;
+	
+	bool clearLightmapAfterModification = false;
 
 public:
 	MinecraftPlayState(sf::RenderWindow& _window);

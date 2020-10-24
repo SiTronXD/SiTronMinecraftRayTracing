@@ -1,6 +1,7 @@
 #include "Player.h"
 
 Player::Player()
+	: worldHandler(nullptr)
 {
 	position = sf::Vector3f(4.0f, 0.0f, 4.0f);
 

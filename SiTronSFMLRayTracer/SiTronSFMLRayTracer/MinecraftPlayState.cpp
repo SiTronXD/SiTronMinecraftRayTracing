@@ -1,14 +1,14 @@
 #include "MinecraftPlayState.h"
 
 MinecraftPlayState::MinecraftPlayState(sf::RenderWindow& _window)
-    : Gamestate(_window)
+    : Gamestate(_window), player(nullptr)
 {
 	
 }
 
 MinecraftPlayState::~MinecraftPlayState()
 {
-	
+    delete this->player;
 }
 
 void MinecraftPlayState::init()
@@ -73,7 +73,7 @@ void MinecraftPlayState::init()
     windowShaderRect.setFillColor(sf::Color::Magenta);
 
     // Create render texture for post processing effects
-    if (!renderTexture.create(settingsHandler.GetWindowWidth(), settingsHandler.GetWindowHeight()))
+    if (!screenRenderTexture.create(settingsHandler.GetWindowWidth(), settingsHandler.GetWindowHeight()))
         Log::print("Couldn't create render texture");
 
     // Create render textures for light maps
@@ -84,8 +84,9 @@ void MinecraftPlayState::init()
     if (!lightmapTextures[2].create(LIGHTMAP_BLOCK_SIDE_SIZE * NUM_CHUNK_WIDTH_LENGTH * LIGHTMAP_FRONT_HORIZONTAL_TILE_SIZE, LIGHTMAP_BLOCK_SIDE_SIZE * NUM_CHUNK_HEIGHT * LIGHTMAP_FRONT_VERTICAL_TILE_SIZE))
         Log::print("Couldn't create render texture for front light map");
 
-    player.init(&worldHandler);
-    inputHandler.init(&player, &window);
+    player = new Player();
+    player->init(&worldHandler);
+    inputHandler.init(&*player, &window);
 
     // Crosshair
     crosshairRect.setSize(sf::Vector2f(25, 25));
@@ -103,8 +104,8 @@ void MinecraftPlayState::init()
         {
             float noiseX = x / 1000.0f;
             float noiseZ = z / 1000.0f;
-            float y = (float)floor(SMath::perlinNoise(noiseX, noiseZ) * 5.0f) - 4;
-            y = SMath::clamp(y, -3, 0);
+            int y = (int) floor(SMath::perlinNoise(noiseX, noiseZ) * 5.0f) - 4;
+            y = (int) SMath::clamp(y, -3, 0);
 
             worldHandler.AddBlock(sf::Vector3i(x, y, z), BlockType::Stone);
         }
@@ -143,14 +144,19 @@ void MinecraftPlayState::init()
     worldHandler.AddBlock(sf::Vector3i(6, 0, 6), BlockType::RedstoneBlock);
     worldHandler.AddBlock(sf::Vector3i(5, 0, 6), BlockType::RedstoneBlock);
 
+    // Sun
+    this->sunPos = sf::Vector3f(0.0f, 4.0f, 0.0f);
+    this->sunColor = sf::Vector3f(1.0f, 0.9f, 0.7f);
+    this->sunRadius = 3.0f;
+    this->sunColorIntensity = 3.0f;
 
     // Text
     font.loadFromFile("C:/Windows/Fonts/arial.ttf");
     text.setFont(font);
     text.setCharacterSize(20);
 
+    // Clear lightmaps
     this->clearLightmaps();
-    this->iterateOverLightmaps();
 }
 
 void MinecraftPlayState::handleInput(float dt)
@@ -169,7 +175,7 @@ void MinecraftPlayState::update(float dt)
     std::vector<Block*> blocksToRender = worldHandler.GetBlocksToRender();
 
     // Fill arrays with positions, indices and specular
-    int numValidBlocks = SMath::min(256, blocksToRender.size());
+    int numValidBlocks = SMath::min(256, (int) blocksToRender.size());
 
     sf::Glsl::Vec3 blockPositions[NUM_MAX_RENDER_BLOCKS] {};    // Positions for each block
 
@@ -184,8 +190,8 @@ void MinecraftPlayState::update(float dt)
         blockPositions[i] = (sf::Glsl::Vec3) blocksToRender[i]->getPosition();
 
         // Change alpha over time
-        float o = blocksToRender[i]->getBlockTypeIndex() != 0 ? 1.0 :
-            (sin(timer) * 0.5 + 0.5);
+        float o = blocksToRender[i]->getBlockTypeIndex() != 0 ? 1.0f :
+            (sin(timer) * 0.5f + 0.5f);
 
         // Pack vec3 with information
         blockInfo[i] = sf::Glsl::Vec3(
@@ -196,9 +202,9 @@ void MinecraftPlayState::update(float dt)
     }
 
     // Package camera vectors into camera matrix
-    sf::Glsl::Vec3 camRight = player.getRightVector();
-    sf::Glsl::Vec3 camUp = player.getUpVector();
-    sf::Glsl::Vec3 camForward = player.getForwardVector();
+    sf::Glsl::Vec3 camRight = player->getRightVector();
+    sf::Glsl::Vec3 camUp = player->getUpVector();
+    sf::Glsl::Vec3 camForward = player->getForwardVector();
 
     float cameraRotMatFloatArray[3 * 3] =
     {
@@ -212,8 +218,25 @@ void MinecraftPlayState::update(float dt)
     // Update shader
 
     // Camera
-    rayTracingShader.setUniform("u_cameraPosition", player.getPosition());
+    rayTracingShader.setUniform("u_cameraPosition", player->getPosition());
     rayTracingShader.setUniform("u_cameraRot", cameraRot);
+
+    // Sun
+	rayTracingShader.setUniform("u_sunSpherePosRadius", 
+        sf::Glsl::Vec4(
+            sunPos.x,
+            sunPos.y,
+            sunPos.z,
+            sunRadius
+	    )
+    );
+	rayTracingShader.setUniform("u_sunColor", 
+        sf::Glsl::Vec3(
+            sunColor.x,
+            sunColor.y,
+            sunColor.z
+	    )
+    );
 
     // Blocks
     rayTracingShader.setUniformArray("u_blockTextureRect", Block::TEXTURE_RECTS, Block::MAX_NUM_TEXTURE_RECTS);
@@ -237,12 +260,12 @@ void MinecraftPlayState::draw()
     this->iterateOverLightmaps();
 
     // Render world to texture
-    renderTexture.draw(windowShaderRect, &rayTracingShader);
-    renderTexture.draw(crosshairRect);
-    renderTexture.display();
+    screenRenderTexture.draw(windowShaderRect, &rayTracingShader);
+    screenRenderTexture.draw(crosshairRect);
+    screenRenderTexture.display();
 
     // Render texture to screen with post-processing effect
-    postProcessingShader.setUniform("u_mainTexture", renderTexture.getTexture());
+    postProcessingShader.setUniform("u_mainTexture", screenRenderTexture.getTexture());
     postProcessingShader.setUniform("u_resolution", sf::Glsl::Vec2((float)settingsHandler.GetWindowWidth(), (float)settingsHandler.GetWindowHeight()));
     window.draw(windowShaderRect, &postProcessingShader);
 
@@ -290,6 +313,25 @@ void MinecraftPlayState::iterateOverLightmaps()
     this->lightmapGeneratorShader.setUniform("u_lightmapSideSize", (int)this->LIGHTMAP_BLOCK_SIDE_SIZE);
     this->lightmapGeneratorShader.setUniform("u_numValidBlocks", numValidBlocks);
     this->lightmapGeneratorShader.setUniformArray("u_blocks", blockPositions, this->NUM_MAX_RENDER_BLOCKS);
+
+	// Sun
+    this->lightmapGeneratorShader.setUniform("u_sunSpherePosRadius", 
+        sf::Glsl::Vec4
+        (
+            sunPos.x,
+            sunPos.y,
+            sunPos.z,
+            sunRadius
+        )
+    );
+    this->lightmapGeneratorShader.setUniform("u_sunColor",
+        sf::Glsl::Vec3
+        (
+            sunColor.x * sunColorIntensity,
+            sunColor.y * sunColorIntensity,
+            sunColor.z * sunColorIntensity
+        )
+    );
 
     sf::RenderStates currentRenderState;
     currentRenderState.blendMode = sf::BlendNone;

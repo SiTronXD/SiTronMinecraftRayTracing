@@ -5,6 +5,9 @@
 // 2: Edge detection with a trous wavelet transform
 // 3: Smart denoise with circular gaussian kernel
 #define DENOISER_MODE 3
+// 2: Keeps details like hard edged shadows, but can't remove noise that well
+// 3: Removes a lot of noise, but can't keep details like hard edged shadows
+
 
 // Uniforms
 uniform vec2 u_lightmapNumChunkSize;
@@ -29,7 +32,7 @@ vec2 offset[25] = vec2[](
 	vec2(-2,  1), vec2(-1,  1), vec2( 0,  1), vec2( 1,  1), vec2( 2,  1),
 	vec2(-2,  2), vec2(-1,  2), vec2( 0,  2), vec2( 1,  2), vec2( 2,  2)
 );
-float aTrousKernel[25] = float[](
+float aTrousConvolutionMask[25] = float[](
 	1.0f  / 256.0f,		4.0f  / 256.0f,		6.0f  / 256.0f,		4.0f  / 256.0f,		1.0f  / 256.0f,
 	4.0f  / 256.0f,		16.0f / 256.0f,		24.0f / 256.0f,		16.0f / 256.0f,		4.0f  / 256.0f,
 	6.0f  / 256.0f,		24.0f / 256.0f,		36.0f / 256.0f,		24.0f / 256.0f,		6.0f  / 256.0f,
@@ -197,7 +200,7 @@ void main()
 
 		// Weight
 		float weight = c_w * n_w;
-		float w = weight * aTrousKernel[i];
+		float w = weight * aTrousConvolutionMask[i];
 		sum += colTmp * w;
 		sum_w += w;
 	}

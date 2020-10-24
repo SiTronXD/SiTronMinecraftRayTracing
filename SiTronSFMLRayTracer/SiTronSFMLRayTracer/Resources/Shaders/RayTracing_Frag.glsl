@@ -55,6 +55,7 @@ uniform vec2 u_resolution;
 
 uniform vec3 u_cameraPosition;
 uniform vec3 u_blocks[NUM_MAX_BLOCKS];
+uniform vec3 u_sunColor;
 
 // x: u_blockIndex
 // y: u_blockSpecular
@@ -64,6 +65,7 @@ uniform vec3 u_blockInfo[NUM_MAX_BLOCKS];
 uniform mat3x3 u_cameraRot;
 
 uniform vec4 u_blockTextureRect[NUM_MAX_TEXTURERECTS];
+uniform vec4 u_sunSpherePosRadius;
 
 uniform sampler2D u_textureSheet;
 uniform sampler2D u_blueNoiseTexture;
@@ -391,7 +393,7 @@ void raySphereIntersection(inout Ray r, vec3 spherePos, float sphereRadius)
 		r.currentT = t;
 		r.hit.currentNormal = normal;
 		r.hit.specular = 0.0f;
-		r.hit.currentColor = vec4(1.0f, 0.9f, 0.7f, 1.0);// * min(0.5, dot(normalize(vec3(1.0, 1.0, -1.0)), normal));
+		r.hit.currentColor = vec4(u_sunColor, 1.0);// * min(0.5, dot(normalize(vec3(1.0, 1.0, -1.0)), normal));
 	}
 }
 
@@ -407,7 +409,7 @@ void raySceneIntersection(inout Ray r, vec2 correctUV)
 		);
 	}
 
-	raySphereIntersection(r, vec3(0, 4, 0), 3.0f);
+	raySphereIntersection(r, u_sunSpherePosRadius.xyz, u_sunSpherePosRadius.w);
 }
 
 vec3 getSkyboxColor(vec3 rayDirection)
