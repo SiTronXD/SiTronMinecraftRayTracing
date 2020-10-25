@@ -1,13 +1,22 @@
 #version 130
 
+// Mode 2 reference: 
+// Dammertz, Sewtz, Hanika, Lensch
+// (2010)
+// 'Edge-avoiding À-Trous wavelet transform for fast global illumination filtering'
+// 'Proceedings of the Conference on High Performance Graphics'
+// June
+// ACM Digital Library
+
+
+
 // 0: Off
-// 1: Kernel blur
+// 1: 3x3 kernel blur
 // 2: Edge detection with a trous wavelet transform
 // 3: Smart denoise with circular gaussian kernel
 #define DENOISER_MODE 3
-// 2: Keeps details like hard edged shadows, but can't remove noise that well
+// 2: Keeps details like hard edged shadows, but can't remove noise all too well
 // 3: Removes a lot of noise, but can't keep details like hard edged shadows
-
 
 // Uniforms
 uniform vec2 u_lightmapNumChunkSize;
@@ -175,6 +184,7 @@ void main()
 	vec2 pixelSize = 1.0 / u_lightmapSize;
 	vec2 uv = gl_FragCoord.xy * pixelSize;
 
+	// Get color and "normal"
 	vec4 c = texture2D(u_lightmapTexture, uv);
 	vec3 colOrg = c.xyz;
 	vec3 norOrg = c.aaa;
@@ -183,7 +193,7 @@ void main()
 	for(int i = 0; i < 25; i++)
 	{
 		vec2 tempUV = uv + offset[i] * pixelSize;
-		vec4 currentCol = getColorFromClampedUV(uv, tempUV, c, pixelSize);//texture2D(u_lightmapTexture, tempUV);
+		vec4 currentCol = getColorFromClampedUV(uv, tempUV, c, pixelSize);
 
 		// Color
 		vec3 colTmp = currentCol.xyz;
@@ -197,6 +207,7 @@ void main()
 		dist = dot(t, t);
 		float n_w = min(exp(-dist/norPhi), 1.0);
 
+		// (The position buffer is being ignored)
 
 		// Weight
 		float weight = c_w * n_w;
