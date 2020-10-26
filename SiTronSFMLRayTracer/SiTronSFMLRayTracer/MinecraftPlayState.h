@@ -17,7 +17,6 @@ private:
 
 	static const uint16_t LIGHTMAP_BLOCK_SIDE_SIZE = 32;
 	static const uint16_t NUM_MAX_SAMPLES = 1024;
-	static const uint16_t NUM_MAX_ITERATIONS_PER_FRAME = 1;
 
 	static const uint8_t LIGHTMAP_UP_HORIZONTAL_TILE_SIZE = 2;
 	static const uint8_t LIGHTMAP_UP_VERTICAL_TILE_SIZE = 2;
@@ -55,12 +54,16 @@ private:
 	sf::Vector3f sunPos;
 	sf::Vector3f sunColor;
 
-	float sunRadius;
-	float sunColorIntensity;
+	float sunRadius = 3.0f;
+	float sunColorIntensity = 3.0f;
 
 	float timer = 0.0f;
 	
+	bool generateLightmaps = true;
 	bool clearLightmapAfterModification = false;
+
+	void clearLightmaps();
+	void clearLightmapsToWhite();
 
 public:
 	MinecraftPlayState(sf::RenderWindow& _window);
@@ -71,6 +74,5 @@ public:
 	virtual void update(float dt);
 	virtual void draw();
 
-	void clearLightmaps();
 	void iterateOverLightmaps();
 };

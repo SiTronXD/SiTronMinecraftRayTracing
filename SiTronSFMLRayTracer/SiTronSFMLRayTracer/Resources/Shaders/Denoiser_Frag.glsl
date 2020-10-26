@@ -14,9 +14,10 @@
 // 1: 3x3 kernel blur
 // 2: Edge detection with a trous wavelet transform
 // 3: Smart denoise with circular gaussian kernel
-#define DENOISER_MODE 3
+#define DENOISER_MODE 1
+
 // 2: Keeps details like hard edged shadows, but can't remove noise all too well
-// 3: Removes a lot of noise, but can't keep details like hard edged shadows
+// 3: Removes a lot of noise, but can't keep details like hard edged shadows (unless the lightmaps are high res)
 
 // Uniforms
 uniform vec2 u_lightmapNumChunkSize;
@@ -201,13 +202,13 @@ void main()
 		float dist = dot(t, t);
 		float c_w = min(exp(-dist/colPhi), 1.0);
 
-		// Normal
+		// Normal (would have a bigger impact if the lightmaps didn't lay on the same plane)
 		vec3 norTmp = currentCol.aaa;
 		t = norOrg - norTmp;
 		dist = dot(t, t);
 		float n_w = min(exp(-dist/norPhi), 1.0);
 
-		// (The position buffer is being ignored)
+		// (The position buffer is being ignored completely)
 
 		// Weight
 		float weight = c_w * n_w;
@@ -246,6 +247,7 @@ void main()
 		}
 	}
 
+	// Blur by adding surrounding colors
 	vec3 col = vec3(0.0);
 	for(int i = 0; i < 9; i++)
 		col += texCols[i] * blurKernel[i];

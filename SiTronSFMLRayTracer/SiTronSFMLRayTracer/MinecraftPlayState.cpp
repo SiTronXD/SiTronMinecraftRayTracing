@@ -145,18 +145,26 @@ void MinecraftPlayState::init()
     worldHandler.AddBlock(sf::Vector3i(5, 0, 6), BlockType::RedstoneBlock);
 
     // Sun
-    this->sunPos = sf::Vector3f(0.0f, 4.0f, 0.0f);
+    /*this->sunPos = sf::Vector3f(0.0f, 4.0f, 0.0f);
     this->sunColor = sf::Vector3f(1.0f, 0.9f, 0.7f);
     this->sunRadius = 3.0f;
-    this->sunColorIntensity = 3.0f;
+    this->sunColorIntensity = 3.0f;*/
+    this->sunPos = sf::Vector3f(0.0f, 4.0f, 4.0f);
+    this->sunColor = sf::Vector3f(0.2f, 1.0f, 0.2f);
+    this->sunRadius = 1.0f;
+    this->sunColorIntensity = 30.0f;
 
     // Text
     font.loadFromFile("C:/Windows/Fonts/arial.ttf");
     text.setFont(font);
-    text.setCharacterSize(20);
+	text.setCharacterSize(20);
+	text.setFillColor(sf::Color::Red);
 
     // Clear lightmaps
-    this->clearLightmaps();
+    if (this->generateLightmaps)
+        this->clearLightmaps();
+    else
+        this->clearLightmapsToWhite();
 }
 
 void MinecraftPlayState::handleInput(float dt)
@@ -272,24 +280,29 @@ void MinecraftPlayState::draw()
 
     // Render lightmaps calculated text
     float percent = (float)this->currentLightmapIteration / NUM_MAX_SAMPLES * 100;
-    text.setString("Calculating lightmaps: " + 
-        std::to_string(percent) + "%");
+    if (percent < 100.0f)
+	{
+		text.setString("Calculating lightmaps: " +
+			std::to_string(percent) + "%");
 
-    if (percent >= 100.0f)
-        text.setFillColor(sf::Color::Green);
-    else
-        text.setFillColor(sf::Color::Red);
-
-    window.draw(text);
+        window.draw(text);
+    }
 }
 
 void MinecraftPlayState::clearLightmaps()
 {
-    this->currentLightmapIteration = 0;
+	this->currentLightmapIteration = 0;
 
-    this->lightmapTextures[0].clear(sf::Color::Black);
-    this->lightmapTextures[1].clear(sf::Color::Black);
-    this->lightmapTextures[2].clear(sf::Color::Black);
+    for(int i = 0; i < 3; i++)
+	    this->lightmapTextures[i].clear(sf::Color::Black);
+}
+
+void MinecraftPlayState::clearLightmapsToWhite()
+{
+	this->currentLightmapIteration = this->NUM_MAX_SAMPLES;
+
+    for(int i = 0; i < 3; i++)
+	    this->lightmapTextures[i].clear(sf::Color::White);
 }
 
 void MinecraftPlayState::iterateOverLightmaps()
@@ -337,47 +350,42 @@ void MinecraftPlayState::iterateOverLightmaps()
     currentRenderState.blendMode = sf::BlendNone;
     currentRenderState.shader = &this->lightmapGeneratorShader;
 
-    // Multiple iterations per frame
-    // This number should be increased if the framerate is capped and "too high"
-    // while the lightmaps are being generated
-    for (int i = 0; i < NUM_MAX_ITERATIONS_PER_FRAME; i++)
-    {
-        this->lightmapGeneratorShader.setUniform("u_currentIteration", (int) this->currentLightmapIteration);
+    // Update shader
+    this->lightmapGeneratorShader.setUniform("u_currentIteration", (int) this->currentLightmapIteration);
 
-        // ---Up sides---
-        this->lightmapGeneratorShader.setUniform("u_currentSide", 0);
-        this->lightmapGeneratorShader.setUniform("u_lightmapNumHorizontalTiles", (int)this->LIGHTMAP_UP_HORIZONTAL_TILE_SIZE);
-        this->lightmapGeneratorShader.setUniform("u_lightmapNumVerticalTiles", (int)this->LIGHTMAP_UP_VERTICAL_TILE_SIZE);
-        this->lightmapGeneratorShader.setUniform("u_lastFrameTexture", this->lightmapTextures[0].getTexture());
+    // ---Up sides---
+    this->lightmapGeneratorShader.setUniform("u_currentSide", 0);
+    this->lightmapGeneratorShader.setUniform("u_lightmapNumHorizontalTiles", (int)this->LIGHTMAP_UP_HORIZONTAL_TILE_SIZE);
+    this->lightmapGeneratorShader.setUniform("u_lightmapNumVerticalTiles", (int)this->LIGHTMAP_UP_VERTICAL_TILE_SIZE);
+    this->lightmapGeneratorShader.setUniform("u_lastFrameTexture", this->lightmapTextures[0].getTexture());
 
-        // Generate lightmaps
-        this->lightmapTextures[0].draw(this->lightmapShaderRect[0], currentRenderState);
-        this->lightmapTextures[0].display();
+    // Generate lightmaps
+    this->lightmapTextures[0].draw(this->lightmapShaderRect[0], currentRenderState);
+    this->lightmapTextures[0].display();
 
-        // ---Right sides---
-        this->lightmapGeneratorShader.setUniform("u_currentSide", 1);
-        this->lightmapGeneratorShader.setUniform("u_lightmapNumHorizontalTiles", (int)this->LIGHTMAP_RIGHT_HORIZONTAL_TILE_SIZE);
-        this->lightmapGeneratorShader.setUniform("u_lightmapNumVerticalTiles", (int)this->LIGHTMAP_RIGHT_VERTICAL_TILE_SIZE);
-        this->lightmapGeneratorShader.setUniform("u_lastFrameTexture", this->lightmapTextures[1].getTexture());
+    // ---Right sides---
+    this->lightmapGeneratorShader.setUniform("u_currentSide", 1);
+    this->lightmapGeneratorShader.setUniform("u_lightmapNumHorizontalTiles", (int)this->LIGHTMAP_RIGHT_HORIZONTAL_TILE_SIZE);
+    this->lightmapGeneratorShader.setUniform("u_lightmapNumVerticalTiles", (int)this->LIGHTMAP_RIGHT_VERTICAL_TILE_SIZE);
+    this->lightmapGeneratorShader.setUniform("u_lastFrameTexture", this->lightmapTextures[1].getTexture());
 
-        // Generate lightmaps
-        this->lightmapTextures[1].draw(this->lightmapShaderRect[1], currentRenderState);
-        this->lightmapTextures[1].display();
+    // Generate lightmaps
+    this->lightmapTextures[1].draw(this->lightmapShaderRect[1], currentRenderState);
+    this->lightmapTextures[1].display();
 
 
-        // ---Front sides---
-        this->lightmapGeneratorShader.setUniform("u_currentSide", 2);
-        this->lightmapGeneratorShader.setUniform("u_lightmapNumHorizontalTiles", (int)this->LIGHTMAP_FRONT_HORIZONTAL_TILE_SIZE);
-        this->lightmapGeneratorShader.setUniform("u_lightmapNumVerticalTiles", (int)this->LIGHTMAP_FRONT_VERTICAL_TILE_SIZE);
-        this->lightmapGeneratorShader.setUniform("u_lastFrameTexture", this->lightmapTextures[2].getTexture());
+    // ---Front sides---
+    this->lightmapGeneratorShader.setUniform("u_currentSide", 2);
+    this->lightmapGeneratorShader.setUniform("u_lightmapNumHorizontalTiles", (int)this->LIGHTMAP_FRONT_HORIZONTAL_TILE_SIZE);
+    this->lightmapGeneratorShader.setUniform("u_lightmapNumVerticalTiles", (int)this->LIGHTMAP_FRONT_VERTICAL_TILE_SIZE);
+    this->lightmapGeneratorShader.setUniform("u_lastFrameTexture", this->lightmapTextures[2].getTexture());
 
-        // Generate lightmaps
-        this->lightmapTextures[2].draw(this->lightmapShaderRect[2], currentRenderState);
-        this->lightmapTextures[2].display();
+    // Generate lightmaps
+    this->lightmapTextures[2].draw(this->lightmapShaderRect[2], currentRenderState);
+    this->lightmapTextures[2].display();
 
+    this->currentLightmapIteration++;
 
-        this->currentLightmapIteration++;
-    }
 
     // The last sample has been reached
     if (this->currentLightmapIteration >= NUM_MAX_SAMPLES)

@@ -33,7 +33,6 @@ const float FOG_DENSITY = 0.5;
 const float GOLDEN_RATIO_CONJUGATE = 0.618033f; // also just fract(goldenRatio)
 const float MAX_RAY_DISTANCE = 64.0;
 
-const float screenDoorGridSize = 80.0;
 const float bayerMatrix8x8[8*8] = float[]
 (
 	0.0  / 64.0,	48.0 / 64.0,	12.0 / 64.0,	60.0 / 64.0,	3.0  / 64.0,	51.0 / 64.0,	15.0 / 64.0,	63.0 / 64.0,
@@ -75,6 +74,7 @@ uniform sampler2D u_lightMapFrontTexture;
 
 // Non-uniforms
 vec2 oneOverTextureSize = vec2(1.0) / textureSize(u_textureSheet, 0).xy;
+ivec2 blueNoiseSize = textureSize(u_blueNoiseTexture, 0).xy;
 
 // Hit structure
 struct Hit
@@ -148,19 +148,19 @@ float squaredLength(vec3 p)
 	return p.x*p.x + p.y*p.y + p.z*p.z;
 }
 
-bool isTransparent(float alpha, vec2 normalizedUV)
+bool isTransparent(float alpha, ivec2 screenUV)
 {
 	float transparencyThreshold = 0.0f;
 	
 	// Blue noise
 	#if (TRANSPARENCY_MODE == 0)
 
-		transparencyThreshold = texture(u_blueNoiseTexture, normalizedUV).x;
+		transparencyThreshold = texelFetch(u_blueNoiseTexture, screenUV % blueNoiseSize, 0).x;
 		
 	// Animated blue noise
 	#elif (TRANSPARENCY_MODE == 1)
-
-		transparencyThreshold = texture(u_blueNoiseTexture, normalizedUV).x;
+	
+		transparencyThreshold = texelFetch(u_blueNoiseTexture, screenUV % blueNoiseSize, 0).x;
 		
 		// Animate noise
 		transparencyThreshold = fract(transparencyThreshold + (u_time * 10.0) * GOLDEN_RATIO_CONJUGATE);
@@ -168,18 +168,7 @@ bool isTransparent(float alpha, vec2 normalizedUV)
 	// Screen-door
 	#elif (TRANSPARENCY_MODE == 2)
 
-		/*const int pixelSizeFactor = 10;
-		const float gridSizeFactor = 40.0;
-
-		float s = pixelSizeFactor * 2.0 - 1.0;
-		vec2 st = normalizedUV * gridSizeFactor;
-		float c1 = abs(round((fract(st.x)-0.5) * (s+1.0)) / s);
-		float c2 = abs(round((fract(st.y)-0.5) * (s+1.0)) / s);
-    
-		transparencyThreshold = clamp(c1 + c2, 0.05f, 0.95f);*/
-
-
-		vec2 st = floor(normalizedUV * screenDoorGridSize);
+		vec2 st = screenUV;
 
 		transparencyThreshold = bayerMatrix8x8[
 			(int(st.x) % 8) + 
@@ -286,7 +275,7 @@ void rayBoxAABBIntersection(inout Ray r, vec3 minCorner, vec3 maxCorner,
 	}
 
 	// Transparency test
-	if(isTransparent(u_blockInfo[loopIndex].z, normalizedUV))
+	if(isTransparent(u_blockInfo[loopIndex].z, ivec2(gl_FragCoord.xy)))
 	{
 		return;
 	}
@@ -470,7 +459,7 @@ vec3 godRaysAttempt1(Ray r)
 vec3 godRaysAttempt2(Ray r, vec2 correctUV, vec3 pixelColor)
 {
 	// Start ray position
-	float startT = texture(u_blueNoiseTexture, correctUV).r;
+	float startT = texture2D(u_blueNoiseTexture, correctUV).r;
 	startT = fract(startT + (u_time * 500.0) * GOLDEN_RATIO_CONJUGATE);
 
 	// Collect samples
@@ -513,12 +502,12 @@ void main()
 		vec2(u_resolution.x / u_resolution.y, 1.0));
 
 	// Debug u_lightMapUpTexture
-	if(correctUV.x < 0.8 && correctUV.y < 0.2 && uv.x < 0.0)
+	/*if(correctUV.x < 0.8 && correctUV.y < 0.2 && uv.x < 0.0)
 	{
 		gl_FragColor = vec4(texture2D(u_lightMapFrontTexture, correctUV/vec2(0.8, 0.2)).rgb, 1.0);
 
 		return;
-	}
+	}*/
 
 	// Create camera
 	vec2 unitVec = vec2(1.0, 0.0);

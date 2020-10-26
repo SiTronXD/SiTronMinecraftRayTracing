@@ -3,9 +3,12 @@
 Player::Player()
 	: worldHandler(nullptr)
 {
-	position = sf::Vector3f(4.0f, 0.0f, 4.0f);
+	//position = sf::Vector3f(4.0f, 0.0f, 4.0f);
+	//direction = sf::Vector2f(0.0f, 0.0f);
 
-	direction = sf::Vector2f(0.0f, 0.0f);
+	position = sf::Vector3f(1.0f, -1.0f, 2.0f);
+	direction = sf::Vector2f(3.1415f / 2.0f, 0.0f);
+
 
 	cameraForwardVector = sf::Vector3f(0.0f, 0.0f, 1.0f);
 	worldUpVector = sf::Vector3f(0.0f, 1.0f, 0.0f);
