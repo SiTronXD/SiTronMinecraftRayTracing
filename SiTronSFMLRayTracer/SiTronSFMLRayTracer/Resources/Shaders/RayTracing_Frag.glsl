@@ -420,43 +420,7 @@ vec3 getSkyboxColor(vec3 rayDirection)
 	return col;
 }
 
-vec3 godRaysAttempt1(Ray r)
-{
-	float godRay = 0.0;
-
-	Ray godRaysRay;
-
-	if(r.currentT <= 8.0 || r.currentT >= MAX_RAY_DISTANCE)
-	{
-		const float samples = 20.0;
-		float maxSampleDistance = clamp(r.currentT, 0.0, 8.0);
-		for(float i = 0.0; i < samples; i += 1.0)
-		{
-			godRaysRay = createRay(r.rayPosition + r.rayDirection * (i/samples) * maxSampleDistance, -LIGHT_DIR);
-
-			for(int i = 0; i < u_numValidBlocks; i++)
-			{
-				rayBoxAABBIntersection(
-					godRaysRay, 
-					u_blocks[i] + vec3(-0.5), 
-					u_blocks[i] + vec3(0.5),
-					i
-				);
-			}
-
-			godRay += godRaysRay.currentT >= MAX_RAY_DISTANCE ? 1.0 : 0.0;
-		}
-		godRay /= samples;
-	}
-	else
-		godRay = 1.0;
-
-	vec3 shadowCol = pow(godRaysRay.hit.currentColor.rgb * vec3(0.99), vec3(8.0)) / pow(clamp(godRaysRay.currentT, 1.0, 5.0), 3.0);
-
-	return mix(shadowCol, vec3(1.0), godRay);
-}
-
-vec3 godRaysAttempt2(Ray r, vec2 correctUV, vec3 pixelColor)
+vec3 godRays(Ray r, vec2 correctUV, vec3 pixelColor)
 {
 	// Start ray position
 	float startT = texture2D(u_blueNoiseTexture, correctUV).r;
@@ -502,12 +466,12 @@ void main()
 		vec2(u_resolution.x / u_resolution.y, 1.0));
 
 	// Debug u_lightMapUpTexture
-	/*if(correctUV.x < 0.8 && correctUV.y < 0.2 && uv.x < 0.0)
+	if(correctUV.x < 0.2 && correctUV.y < 0.2 && uv.x < 0.0)
 	{
-		gl_FragColor = vec4(texture2D(u_lightMapFrontTexture, correctUV/vec2(0.8, 0.2)).rgb, 1.0);
+		gl_FragColor = vec4(texture2D(u_lightMapUpTexture, correctUV/vec2(0.2, 0.2)).rgb, 1.0);
 
 		return;
-	}*/
+	}
 
 	// Create camera
 	vec2 unitVec = vec2(1.0, 0.0);
@@ -553,12 +517,9 @@ void main()
 			break;
 		}
 		
-		// God rays attempt 1
-		//currentCol *= r.currentColor * vec4(godRaysAttempt1(r), 1.0);
-
-		// God rays attempt 2
+		// God rays
 		#if GOD_RAYS_ENABLED
-			r.hit.currentColor.rgb = godRaysAttempt2(r, correctUV, r.hit.currentColor.rgb);
+			r.hit.currentColor.rgb = godRays(r, correctUV, r.hit.currentColor.rgb);
 		#endif
 
 		// Apply color
