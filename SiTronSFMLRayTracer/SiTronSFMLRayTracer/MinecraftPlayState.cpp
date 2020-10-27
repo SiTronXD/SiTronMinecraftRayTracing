@@ -144,15 +144,17 @@ void MinecraftPlayState::init()
     worldHandler.AddBlock(sf::Vector3i(6, 0, 6), BlockType::RedstoneBlock);
     worldHandler.AddBlock(sf::Vector3i(5, 0, 6), BlockType::RedstoneBlock);
 
-    // Sun
-    /*this->sunPos = sf::Vector3f(0.0f, 4.0f, 0.0f);
+    // Sun setup 1
+    this->sunPos = sf::Vector3f(0.0f, 4.0f, 0.0f);
     this->sunColor = sf::Vector3f(1.0f, 0.9f, 0.7f);
     this->sunRadius = 3.0f;
-    this->sunColorIntensity = 3.0f;*/
-    this->sunPos = sf::Vector3f(0.0f, 4.0f, 4.0f);
+    this->sunColorIntensity = 3.0f;
+    
+    // Sun setup 2
+    /*this->sunPos = sf::Vector3f(0.0f, 4.0f, 4.0f);
     this->sunColor = sf::Vector3f(0.2f, 1.0f, 0.2f);
     this->sunRadius = 1.0f;
-    this->sunColorIntensity = 30.0f;
+    this->sunColorIntensity = 30.0f;*/
 
     // Text
     font.loadFromFile("C:/Windows/Fonts/arial.ttf");

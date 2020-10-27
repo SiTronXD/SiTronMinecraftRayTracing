@@ -11,19 +11,19 @@
 class MinecraftPlayState : public Gamestate
 {
 private:
-	static const uint16_t NUM_MAX_RENDER_BLOCKS = 256;
-	static const uint16_t NUM_CHUNK_WIDTH_LENGTH = 8;
-	static const uint16_t NUM_CHUNK_HEIGHT = 4;
+	static const unsigned int NUM_MAX_RENDER_BLOCKS = 256;
+	static const unsigned int NUM_CHUNK_WIDTH_LENGTH = 8;
+	static const unsigned int NUM_CHUNK_HEIGHT = 4;
 
-	static const uint16_t LIGHTMAP_BLOCK_SIDE_SIZE = 32;
-	static const uint16_t NUM_MAX_SAMPLES = 1024;
+	static const unsigned int LIGHTMAP_BLOCK_SIDE_SIZE = 32;
+	static const unsigned int NUM_MAX_SAMPLES = 1024;
 
-	static const uint8_t LIGHTMAP_UP_HORIZONTAL_TILE_SIZE = 2;
-	static const uint8_t LIGHTMAP_UP_VERTICAL_TILE_SIZE = 2;
-	static const uint8_t LIGHTMAP_RIGHT_HORIZONTAL_TILE_SIZE = 4;
-	static const uint8_t LIGHTMAP_RIGHT_VERTICAL_TILE_SIZE = 2;
-	static const uint8_t LIGHTMAP_FRONT_HORIZONTAL_TILE_SIZE = 4;
-	static const uint8_t LIGHTMAP_FRONT_VERTICAL_TILE_SIZE = 2;
+	static const unsigned int LIGHTMAP_UP_HORIZONTAL_TILE_SIZE = 2;
+	static const unsigned int LIGHTMAP_UP_VERTICAL_TILE_SIZE = 2;
+	static const unsigned int LIGHTMAP_RIGHT_HORIZONTAL_TILE_SIZE = 4;
+	static const unsigned int LIGHTMAP_RIGHT_VERTICAL_TILE_SIZE = 2;
+	static const unsigned int LIGHTMAP_FRONT_HORIZONTAL_TILE_SIZE = 4;
+	static const unsigned int LIGHTMAP_FRONT_VERTICAL_TILE_SIZE = 2;
 
 	sf::Shader rayTracingShader;
 	sf::Shader lightmapGeneratorShader;
@@ -49,7 +49,7 @@ private:
 	InputHandler inputHandler;
 	Player* player;
 
-	uint32_t currentLightmapIteration = 0;
+	unsigned int currentLightmapIteration = 0;
 
 	sf::Vector3f sunPos;
 	sf::Vector3f sunColor;
