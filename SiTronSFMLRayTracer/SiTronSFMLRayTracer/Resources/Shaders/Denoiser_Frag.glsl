@@ -16,9 +16,9 @@
 
 // 0: Off
 // 1: 3x3 kernel blur
-// 2: Edge detection with a trous wavelet transform
+// 2: Edge avoiding a trous wavelet transform
 // 3: Smart denoise with circular gaussian kernel
-#define DENOISER_MODE 1
+#define DENOISER_MODE 3
 
 // 2: Keeps details like hard edged shadows, but can't remove noise all too well
 // 3: Removes a lot of noise, but can't keep details like hard edged shadows (unless the lightmaps are high res)
@@ -187,7 +187,9 @@ vec3 aTrousDenoise(vec2 uv, vec2 pixelSize)
 		float dist = dot(t, t);
 		float c_w = min(exp(-dist/colPhi), 1.0);
 
-		// Normal (would have a bigger impact if the lightmaps didn't lay on the same plane)
+		// Normal (would have a bigger impact if the lightmaps didn't lay on the same plane, but this
+		// weight is still necessary since the normal could point in opposite directions between 
+		// neighboring tiles sharing the same texture)
 		vec3 norTmp = currentCol.aaa;
 		t = norOrg - norTmp;
 		dist = dot(t, t);

@@ -466,12 +466,12 @@ void main()
 		vec2(u_resolution.x / u_resolution.y, 1.0));
 
 	// Debug u_lightMapUpTexture
-	if(correctUV.x < 0.2 && correctUV.y < 0.2 && uv.x < 0.0)
+	/*if(correctUV.x < 0.2 && correctUV.y < 0.2 && uv.x < 0.0)
 	{
 		gl_FragColor = vec4(texture2D(u_lightMapUpTexture, correctUV/vec2(0.2, 0.2)).rgb, 1.0);
 
 		return;
-	}
+	}*/
 
 	// Create camera
 	vec2 unitVec = vec2(1.0, 0.0);

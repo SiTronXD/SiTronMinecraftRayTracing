@@ -10,7 +10,7 @@ const float MAX_RAY_DISTANCE = 64.0;
 const float TWO_PI = 3.141592f * 2.0f;
 const float RAY_SHORT_OFFSET = 0.0001f;
 
-const vec3 IGNORE_COLOR = vec3(1.0f, 0.0f, 1.0f);
+const vec3 IGNORE_COLOR = vec3(0.0f, 0.0f, 0.0f);
 
 // Uniforms
 uniform int u_numValidBlocks;
