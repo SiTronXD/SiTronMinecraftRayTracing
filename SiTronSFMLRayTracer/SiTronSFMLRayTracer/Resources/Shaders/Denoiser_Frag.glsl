@@ -187,18 +187,14 @@ vec3 aTrousDenoise(vec2 uv, vec2 pixelSize)
 		float dist = dot(t, t);
 		float c_w = min(exp(-dist/colPhi), 1.0);
 
-		// Normal (would have a bigger impact if the lightmaps didn't lay on the same plane, but this
-		// weight is still necessary since the normal could point in opposite directions between 
-		// neighboring tiles sharing the same texture)
-		vec3 norTmp = currentCol.aaa;
-		t = norOrg - norTmp;
-		dist = dot(t, t);
-		float n_w = min(exp(-dist/norPhi), 1.0);
+		// (The normal buffer is ignored because the normals are the same in each point on the surface.)
+		// (The position buffer is ignored because the position is proportional to the uvs.)
 
-		// (The position buffer is being completely ignored)
+		// (This algorithm would most likely be more effective if it was used from the 
+		// cameras pov as described in the paper.)
 
-		// Weight
-		float weight = c_w * n_w;
+		// Final weight
+		float weight = c_w;
 		float w = weight * aTrousConvolutionMask[i];
 		sum += colTmp * w;
 		sum_w += w;
