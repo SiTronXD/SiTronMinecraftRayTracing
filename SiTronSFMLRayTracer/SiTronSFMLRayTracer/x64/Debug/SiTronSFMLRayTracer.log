@@ -1,3 +1,16 @@
-﻿  Player.cpp
-D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\SiTronSFMLRayTracer\Player.cpp(47,73): warning C4305: 'argument': truncation from 'double' to 'const float'
+﻿  Block.cpp
+  Gamestate.cpp
+  GamestateManager.cpp
+  Hit.cpp
+  InputHandler.cpp
+  Loader.cpp
+  Log.cpp
+  Main.cpp
+  MinecraftPlayState.cpp
+  Player.cpp
+  Ray.cpp
+  SettingsHandler.cpp
+  SMath.cpp
+  WorldHandler.cpp
+  Generating Code...
   SiTronSFMLRayTracer.vcxproj -> D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\x64\Debug\SiTronSFMLRayTracer.exe

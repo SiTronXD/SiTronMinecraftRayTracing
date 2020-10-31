@@ -48,17 +48,17 @@ Hit Ray::GetClosestBoxHit(sf::Vector3i boxPos)
 	// Horizontal sides
 	if (t == t1 || t == t2)
 	{
-		newHitInfo.normal = sf::Vector3f(t == t1 ? -1.0 : 1.0, 0.0, 0.0);
+		newHitInfo.normal = sf::Vector3f(t == t1 ? -1.0f : 1.0f, 0.0f, 0.0f);
 	}
 	// Top or bottom
 	else if (t == t3 || t == t4)
 	{
-		newHitInfo.normal = sf::Vector3f(0.0f, t == t3 ? -1.0 : 1.0, 0.0);
+		newHitInfo.normal = sf::Vector3f(0.0f, t == t3 ? -1.0f : 1.0f, 0.0f);
 	}
 	// Other sides
 	else if (t == t5 || t == t6)
 	{
-		newHitInfo.normal = sf::Vector3f(0.0f, 0.0, t == t5 ? -1.0 : 1.0);
+		newHitInfo.normal = sf::Vector3f(0.0f, 0.0f, t == t5 ? -1.0f : 1.0f);
 	}
 
 	return newHitInfo;

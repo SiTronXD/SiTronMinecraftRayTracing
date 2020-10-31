@@ -104,10 +104,13 @@ void MinecraftPlayState::init()
         {
             float noiseX = x / 1000.0f;
             float noiseZ = z / 1000.0f;
-            int y = (int) floor(SMath::perlinNoise(noiseX, noiseZ) * 5.0f) - 4;
-            y = (int) SMath::clamp(y, -3, 0);
+            float y = floor(SMath::perlinNoise(noiseX, noiseZ) * 5.0f) - 4.0f;
+            y = SMath::clamp(y, -3, 0);
 
-            worldHandler.AddBlock(sf::Vector3i(x, y, z), BlockType::Stone);
+            worldHandler.AddBlock(
+                sf::Vector3i(x, (int) y, z), 
+                BlockType::Stone
+            );
         }
     }
 
@@ -185,7 +188,7 @@ void MinecraftPlayState::update(float dt)
     std::vector<Block*> blocksToRender = worldHandler.GetBlocksToRender();
 
     // Fill arrays with positions, indices and specular
-    int numValidBlocks = SMath::min(256, (int) blocksToRender.size());
+    int numValidBlocks = (int) SMath::min(256, (float) blocksToRender.size());
 
     sf::Glsl::Vec3 blockPositions[NUM_MAX_RENDER_BLOCKS] {};    // Positions for each block
 
@@ -205,7 +208,7 @@ void MinecraftPlayState::update(float dt)
 
         // Pack vec3 with information
         blockInfo[i] = sf::Glsl::Vec3(
-            blocksToRender[i]->getBlockTypeIndex(), 
+            static_cast<float>(blocksToRender[i]->getBlockTypeIndex()), 
             blocksToRender[i]->getBlockSpecular(),
             blocksToRender[i]->getBlockTransparency() * o
         );
@@ -315,7 +318,7 @@ void MinecraftPlayState::iterateOverLightmaps()
 
     // Collect info
     std::vector<Block*> blocksToRender = worldHandler.GetBlocksToRender();
-    int numValidBlocks = SMath::min(256, blocksToRender.size());
+    int numValidBlocks = (int) SMath::min(256, (float) blocksToRender.size());
 
     sf::Glsl::Vec3 blockPositions[NUM_MAX_RENDER_BLOCKS]{};	    // Positions for each block
 
@@ -395,12 +398,12 @@ void MinecraftPlayState::iterateOverLightmaps()
         // Find current size
         for (int i = 0; i < 3; i++)
         {
-            int lmChunkSizeWidth = 0;
-            int lmChunkSizeHeight = 0;
-            int lmNumTilesWidth = 0;
-            int lmNumTilesHeight = 0;
-            int lmWidth = 0;
-            int lmHeight = 0;
+            float lmChunkSizeWidth = 0;
+            float lmChunkSizeHeight = 0;
+            float lmNumTilesWidth = 0;
+            float lmNumTilesHeight = 0;
+            float lmWidth = 0;
+            float lmHeight = 0;
 
             switch (i)
             {

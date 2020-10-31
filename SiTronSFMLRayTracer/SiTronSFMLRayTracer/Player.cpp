@@ -44,7 +44,7 @@ void Player::rotateDirection(const float _horizontalAngleDir, const float _verti
 	direction.y += _verticalAngleDir;
 
 	// Clamp vertical angle
-	direction.y = SMath::clamp(direction.y, -3.1415 * 0.45f, 3.1415 * 0.45f);
+	direction.y = SMath::clamp(direction.y, -3.1415f * 0.45f, 3.1415f * 0.45f);
 
 	// Calculate forward vector
 	cameraForwardVector.x = sin(direction.x) * cos(direction.y);

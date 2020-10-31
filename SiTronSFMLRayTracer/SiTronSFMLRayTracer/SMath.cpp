@@ -4,7 +4,7 @@ float SMath::lerp(const float a, const float b, float t)
 {
 	t = clamp(t, 0.0f, 1.0f);
 
-	return a * t + (1.0 - t) * b;
+	return a * t + (1.0f - t) * b;
 }
 
 float SMath::smoothstep(const float a, const float b, float t)
@@ -12,7 +12,7 @@ float SMath::smoothstep(const float a, const float b, float t)
 	float tempT = (t - a) / (b - a);
 	tempT = clamp(tempT, 0.0f, 1.0f);
 
-	return tempT * tempT *(3.0 - 2.0 * tempT);
+	return tempT * tempT *(3.0f - 2.0f * tempT);
 }
 
 float SMath::fract(float num)
@@ -34,22 +34,22 @@ float SMath::hashNoise(float x, float y)
 		&intPart
 	);
 
-	return finalHashNoise;
+	return (float) finalHashNoise;
 }
 
 float SMath::perlinNoiseLayer(const float x, const float y)
 {
-	const float gridSize = 10.0;
+	const float gridSize = 10.0f;
 
-	float st_x = smoothstep(0.0, 1.0, fract(x * gridSize));
-	float st_y = smoothstep(0.0, 1.0, fract(y * gridSize));
+	float st_x = smoothstep(0.0f, 1.0f, fract(x * gridSize));
+	float st_y = smoothstep(0.0f, 1.0f, fract(y * gridSize));
 	float id_x = floor(x * gridSize);
 	float id_y = floor(y * gridSize);
 
-	float upperLeft =	hashNoise(id_x + 0.0, id_y + 0.0);
-	float upperRight =	hashNoise(id_x + 1.0, id_y + 0.0);
-	float lowerLeft =	hashNoise(id_x + 0.0, id_y + 1.0);
-	float lowerRight =	hashNoise(id_x + 1.0, id_y + 1.0);
+	float upperLeft =	hashNoise(id_x + 0.0f, id_y + 0.0f);
+	float upperRight =	hashNoise(id_x + 1.0f, id_y + 0.0f);
+	float lowerLeft =	hashNoise(id_x + 0.0f, id_y + 1.0f);
+	float lowerRight =	hashNoise(id_x + 1.0f, id_y + 1.0f);
 
 	float upperMix = lerp(upperLeft, upperRight, st_x);
 	float lowerMix = lerp(lowerLeft, lowerRight, st_x);
