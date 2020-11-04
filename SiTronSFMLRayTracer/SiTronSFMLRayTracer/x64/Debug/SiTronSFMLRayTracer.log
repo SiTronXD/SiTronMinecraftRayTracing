@@ -1,16 +1,4 @@
-﻿  Block.cpp
-  Gamestate.cpp
-  GamestateManager.cpp
-  Hit.cpp
-  InputHandler.cpp
-  Loader.cpp
-  Log.cpp
-  Main.cpp
-  MinecraftPlayState.cpp
+﻿  MinecraftPlayState.cpp
   Player.cpp
-  Ray.cpp
-  SettingsHandler.cpp
-  SMath.cpp
-  WorldHandler.cpp
   Generating Code...
   SiTronSFMLRayTracer.vcxproj -> D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\x64\Debug\SiTronSFMLRayTracer.exe
