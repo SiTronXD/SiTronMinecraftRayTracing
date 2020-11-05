@@ -1,4 +1,4 @@
-﻿  MinecraftPlayState.cpp
-  Player.cpp
+﻿  Main.cpp
+  MinecraftPlayState.cpp
   Generating Code...
   SiTronSFMLRayTracer.vcxproj -> D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\x64\Debug\SiTronSFMLRayTracer.exe

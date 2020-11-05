@@ -30,7 +30,6 @@ const int LIGHTMAP_FRONT_VERTICAL_TILE_SIZE = 2;
 const vec3 LIGHT_DIR = normalize(vec3(-1.0));
 const int NUM_FOG_SAMPLES = 8;
 const float FOG_DENSITY = 0.5;
-const float GOLDEN_RATIO_CONJUGATE = 0.618033f; // also just fract(goldenRatio)
 const float MAX_RAY_DISTANCE = 64.0;
 
 const float bayerMatrix8x8[8*8] = float[]
@@ -163,7 +162,7 @@ bool isTransparent(float alpha, ivec2 screenUV)
 		transparencyThreshold = texelFetch(u_blueNoiseTexture, screenUV % blueNoiseSize, 0).x;
 		
 		// Animate noise
-		transparencyThreshold = fract(transparencyThreshold + (u_time * 10.0) * GOLDEN_RATIO_CONJUGATE);
+		transparencyThreshold = fract(transparencyThreshold + (u_time * 5.0));
 
 	// Screen-door
 	#elif (TRANSPARENCY_MODE == 2)
@@ -424,7 +423,11 @@ vec3 godRays(Ray r, vec2 correctUV, vec3 pixelColor)
 {
 	// Start ray position
 	float startT = texture2D(u_blueNoiseTexture, correctUV).r;
-	startT = fract(startT + (u_time * 500.0) * GOLDEN_RATIO_CONJUGATE);
+	startT = fract(startT + (u_time * 250.0));
+
+	// Switch between with and without noise
+	/*if(fract(u_time) > 0.5f)
+		startT = 0.0f;*/
 
 	// Collect samples
 	float fogLitPercentage = 0.0f;
