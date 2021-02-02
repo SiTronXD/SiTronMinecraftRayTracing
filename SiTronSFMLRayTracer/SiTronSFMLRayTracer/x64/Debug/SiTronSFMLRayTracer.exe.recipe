@@ -1,7 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project>
-  <ProjectOutputs>D:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\x64\Debug\SiTronSFMLRayTracer.exe</ProjectOutputs>
-  <ContentFiles></ContentFiles>
-  <SatelliteDlls></SatelliteDlls>
-  <NonRecipeFileRefs></NonRecipeFileRefs>
+  <ProjectOutputs>
+    <ProjectOutput>
+      <FullPath>E:\VisualStudioProjs\SiTronMinecraftRayTracing\SiTronSFMLRayTracer\x64\Debug\SiTronSFMLRayTracer.exe</FullPath>
+    </ProjectOutput>
+  </ProjectOutputs>
+  <ContentFiles />
+  <SatelliteDlls />
+  <NonRecipeFileRefs />
 </Project>
