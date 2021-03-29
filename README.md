@@ -11,4 +11,5 @@
 # Screenshots
 ![github-small](SiTronSFMLRayTracer/SiTronSFMLRayTracer/Resources/Graphics/Showcase1.png)
 ![github-small](SiTronSFMLRayTracer/SiTronSFMLRayTracer/Resources/Graphics/Showcase4.png)
+![github-small](SiTronSFMLRayTracer/SiTronSFMLRayTracer/Resources/Graphics/Showcase5.png)
 ![github-small](SiTronSFMLRayTracer/SiTronSFMLRayTracer/Resources/Graphics/Showcase2.png)
