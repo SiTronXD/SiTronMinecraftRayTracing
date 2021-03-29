@@ -43,7 +43,7 @@ void MinecraftPlayState::init()
     );
 
     // Load textures
-    Loader::loadTexture("Resources/Graphics/minecraftTextureSheet.png", textureSheet);
+    Loader::loadTexture("Resources/Graphics/textureSheet.png", textureSheet);
     Loader::loadTexture("Resources/Graphics/blueNoiseTexture.png", blueNoiseTexture);
     Loader::loadTexture("Resources/Graphics/Crosshair.png", crosshairTexture);
 
@@ -149,7 +149,8 @@ void MinecraftPlayState::init()
 
     // Sun setup 1
     this->sunPos = sf::Vector3f(0.0f, 4.0f, 0.0f);
-    this->sunColor = sf::Vector3f(1.0f, 0.9f, 0.7f);
+    //this->sunColor = sf::Vector3f(1.0f, 0.2f, 0.2f);
+    this->sunColor = sf::Vector3f(1.0f, 0.9f, 0.8f);
     this->sunRadius = 3.0f;
     this->sunColorIntensity = 3.0f;
     

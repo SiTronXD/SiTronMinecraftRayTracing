@@ -141,12 +141,6 @@ void bounceRay(inout Ray r)
 	r.hit = createEmptyHit();
 }
 
-// Squared length of a vector. Used for fast distance comparison
-float squaredLength(vec3 p)
-{
-	return p.x*p.x + p.y*p.y + p.z*p.z;
-}
-
 bool isTransparent(float alpha, ivec2 screenUV)
 {
 	float transparencyThreshold = 0.0f;
@@ -361,7 +355,8 @@ void raySphereIntersection(inout Ray r, vec3 spherePos, float sphereRadius)
 	vec3 closestPoint = r.rayPosition + r.rayDirection * projectedPointT;
 
 	// Check if the point is inside the sphere
-	float squaredLengthToSphere = squaredLength(closestPoint - spherePos);
+	vec3 toSph = closestPoint - spherePos;
+	float squaredLengthToSphere = dot(toSph, toSph);
 	if(squaredLengthToSphere <= sphereRadius*sphereRadius)
 	{
 		float x = sqrt(sphereRadius*sphereRadius - squaredLengthToSphere);
@@ -526,7 +521,7 @@ void main()
 		#endif
 
 		// Apply color
-		currentCol += r.hit.currentColor * r.currentEnergy;
+		currentCol += r.hit.currentColor * r.hit.currentColor.a;
 		
 		// Lose energy
 		r.currentEnergy *= r.hit.specular;

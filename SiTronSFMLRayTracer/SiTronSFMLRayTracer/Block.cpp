@@ -3,20 +3,20 @@
 const sf::Glsl::Vec4 Block::TEXTURE_RECTS[] =
 {
     sf::Glsl::Vec4(0, 0, 16, 16),    // Dirt block - up
-    sf::Glsl::Vec4(48, 0, 16, 16),   // Dirt block - side
+    sf::Glsl::Vec4(16, 0, 16, 16),   // Dirt block - side
     sf::Glsl::Vec4(32, 0, 16, 16),   // Dirt block - down
 
-    sf::Glsl::Vec4(16, 0, 16, 16),   // Stone block - up
-    sf::Glsl::Vec4(16, 0, 16, 16),   // Stone block - side
-    sf::Glsl::Vec4(16, 0, 16, 16),   // Stone block - down
+    sf::Glsl::Vec4(0, 16, 16, 16),   // Stone block - up
+    sf::Glsl::Vec4(0, 16, 16, 16),   // Stone block - side
+    sf::Glsl::Vec4(0, 16, 16, 16),   // Stone block - down
 
-    sf::Glsl::Vec4(16 * 10, 16, 16, 16),   // Redstone block - up
-    sf::Glsl::Vec4(16 * 10, 16, 16, 16),   // Redstone block - side
-    sf::Glsl::Vec4(16 * 10, 16, 16, 16),   // Redstone block - down
+    sf::Glsl::Vec4(16, 16, 16, 16),   // Redstone block - up
+    sf::Glsl::Vec4(16, 16, 16, 16),   // Redstone block - side
+    sf::Glsl::Vec4(16, 16, 16, 16),   // Redstone block - down
 
-    sf::Glsl::Vec4(16 * 1, 16 * 3, 16, 16),  // Mirror block - up
-    sf::Glsl::Vec4(16 * 1, 16 * 3, 16, 16),  // Mirror block - side
-    sf::Glsl::Vec4(16 * 1, 16 * 3, 16, 16)   // Mirror block - down
+    sf::Glsl::Vec4(32, 16, 16, 16),  // Mirror block - up
+    sf::Glsl::Vec4(32, 16, 16, 16),  // Mirror block - side
+    sf::Glsl::Vec4(32, 16, 16, 16)   // Mirror block - down
 };
 
 const float Block::SPECULAR[] =
