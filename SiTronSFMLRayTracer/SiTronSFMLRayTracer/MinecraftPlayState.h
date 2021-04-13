@@ -1,8 +1,7 @@
 #pragma once
 
-#include "Gamestate.h"
-
-#include "Loader.h"
+#include "Engine/Gamestate.h"
+#include "Engine/Loader.h"
 #include "Player.h"
 #include "WorldHandler.h"
 #include "InputHandler.h"

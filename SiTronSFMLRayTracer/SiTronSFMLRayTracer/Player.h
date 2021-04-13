@@ -4,8 +4,8 @@
 #include <vector>
 
 #include "WorldHandler.h"
-#include "Ray.h"
-#include "SMath.h"
+#include "Engine/Ray.h"
+#include "Engine/SMath.h"
 
 class Player
 {

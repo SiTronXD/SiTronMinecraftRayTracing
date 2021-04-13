@@ -39,28 +39,31 @@
     <ClCompile Include="Block.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Hit.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="Ray.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="SMath.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="GamestateManager.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
-    <ClCompile Include="Gamestate.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
     <ClCompile Include="MinecraftPlayState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Loader.cpp">
+    <ClCompile Include="Engine\Gamestate.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Log.cpp">
+    <ClCompile Include="Engine\GamestateManager.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Hit.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Loader.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Ray.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\SMath.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Log.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Game.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -106,28 +109,31 @@
     <ClInclude Include="Block.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Hit.h">
-      <Filter>Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="Ray.h">
-      <Filter>Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="SMath.h">
-      <Filter>Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="GamestateManager.h">
-      <Filter>Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="Gamestate.h">
-      <Filter>Engine</Filter>
-    </ClInclude>
     <ClInclude Include="MinecraftPlayState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Loader.h">
+    <ClInclude Include="Engine\Gamestate.h">
       <Filter>Engine</Filter>
     </ClInclude>
-    <ClInclude Include="Log.h">
+    <ClInclude Include="Engine\GamestateManager.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Hit.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Loader.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Ray.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\SMath.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Log.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
