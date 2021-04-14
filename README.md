@@ -5,7 +5,7 @@
 * Geometrically perfect reflections
 * Render different texture regions based on face normal
 * Screen door- and stochastic transparency
-* Baked axis-aligned lightmaps with path tracing
+* Baked axis-aligned lightmaps using path tracing
 * 3 types of denoisers for lightmaps: basic 3x3 kernel blur, edge avoiding a trous wavelet transform and circular gaussian kernel blur
 
 # Running the Project
